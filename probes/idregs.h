@@ -72,4 +72,24 @@ static uint64_t id_register(uint32_t crm, uint32_t op2)
     return v;
 }
 
+
+/* Features this machine does not have, cleared out of the ID registers.
+ *
+ * XNU believes what the ID registers say and then uses it. Left alone, the
+ * Snapdragon advertises SME, so XNU wrote SMCR_EL1 and then `msr TPIDR2_EL0,
+ * xzr` at 0xfffffe000c245030 -- undefined here, and delivered to EL1 where we
+ * cannot see it. Every feature we cannot actually support has to be denied at
+ * the source rather than caught after the fact. */
+#define ID_AA64PFR0_EL1_SVE  (0xfUL << 32)
+#define ID_AA64PFR1_EL1_SME  (0xfUL << 24)
+
+static uint64_t id_forge(uint32_t crm, uint32_t op2, uint64_t value)
+{
+    if (crm == 4 && op2 == 0) value &= ~ID_AA64PFR0_EL1_SVE;   /* ID_AA64PFR0 */
+    if (crm == 4 && op2 == 1) value &= ~ID_AA64PFR1_EL1_SME;   /* ID_AA64PFR1 */
+    if (crm == 4 && op2 == 4) value = 0;                       /* ID_AA64ZFR0 */
+    if (crm == 4 && op2 == 5) value = 0;                       /* ID_AA64SMFR0 */
+    return value;
+}
+
 #endif
