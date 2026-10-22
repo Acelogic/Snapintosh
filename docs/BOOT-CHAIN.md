@@ -9,9 +9,9 @@ overall component map see [ARCHITECTURE.md](ARCHITECTURE.md); for the list of
 opt-in kernel-code changes see [KERNEL-PATCHES.md](KERNEL-PATCHES.md); for why
 the hardware needs any of this see [FEASIBILITY.md](FEASIBILITY.md).
 
-No XNU is recompiled. Drivers for the Snapdragon's own hardware come from
-kexts, the way a Hackintosh does it. Apple's firmware set is read from a
-restore image you supply.
+No XNU binaries are recompiled. Hardware-specific drivers for the Snapdragon platform
+are packaged as standard kernel extensions (AuxKC). Proprietary Apple firmware inputs
+are extracted from user-supplied restore images.
 
 ## 1. What Apple's boot chain assumes, and what this machine has
 
