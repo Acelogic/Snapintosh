@@ -114,8 +114,8 @@ Metal device. Two decisions followed:
 
 - Build a real Metal driver for the Adreno GPU (kext plus Metal plug-in plus
   shader compiler).
-- Move to an installed system, because BaseSystem never loads third-party
-  kexts, as on a real Mac.
+- Transition to an installed system volume, as BaseSystem environment policy
+  restricts third-party kext loading.
 
 ## 7. Installed macOS on the internal SSD (September 2026)
 

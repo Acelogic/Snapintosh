@@ -1,10 +1,8 @@
 # Can the Snapdragon X2E-96-100 host XNU?
 
-**Historical feasibility study.** This records the initial hardware probes
-and the options considered before the stock-kernel route was chosen. The
-project went on to boot the stock kernelcache with translated page tables;
-see [BOOT-CHAIN.md](BOOT-CHAIN.md) and [COMPATIBILITY.md](COMPATIBILITY.md)
-for the implemented approach.
+> [!NOTE]
+> **Historical Feasibility Study:**
+> This document archives the initial hardware probes and architectural evaluation prior to selecting the translated page-table route. Current implementation details are documented in [BOOT-CHAIN.md](BOOT-CHAIN.md) and [COMPATIBILITY.md](COMPATIBILITY.md).
 
 **Result: the hardware cannot walk a 16 KiB translation table.** That is
 measured with a control, not read from a register. Everything else on the

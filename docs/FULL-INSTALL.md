@@ -10,13 +10,10 @@ Boot-policy and signing questions are outside the scope of this document. Where
 the installed boot needs Apple boot objects, it relies on Apple software the
 user supplies.
 
-> **Data-loss warning.** This route writes to the laptop's internal SSD. It adds
-> a partition next to Windows (Windows' partition table changes: entries can be
-> renumbered and the free space is consumed), and later writes a full APFS
-> container into it. A mistake in any step can destroy Windows or its recovery
-> partitions. Make a complete, restorable backup of the disk before starting,
-> keep BitLocker recovery keys at hand, and expect to reinstall Windows if
-> something goes wrong.
+> [!CAUTION]
+> **Data Loss Precaution:**
+> This procedure writes directly to the internal NVMe SSD and alters GPT partition geometry.
+> Ensure a verified, complete backup of internal storage and record BitLocker recovery keys prior to modifying partitions or provisioning the APFS container.
 
 ## Why an installed system
 

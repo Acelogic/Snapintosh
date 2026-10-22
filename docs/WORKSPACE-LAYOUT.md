@@ -20,14 +20,14 @@ the two directories next to each other.
 
 | Path | Role |
 | --- | --- |
-| `README.md` | Overview and documentation map ([README](../README.md)) |
+| `README.md` | Overview and documentation map ([README.md](../README.md)) |
 | `docs/` | Public documentation |
 | `compat/` | Monitor contracts, CPU/platform adaptation and device models (SPTM, TXM, AIC, ANS2 storage, GPU passthrough) |
 | `shadow/` | Guest page-table walking and the hardware translation tables |
 | `probes/` | Guest profiles, the host-side loader and runner, image builders and stopped-state readers |
 | `tools/` | Boot cycle tool, analysis, capture, validation and native test sources |
 | `gpu/adreno-kext/` | The Adreno IOGPU kext (AdrenoX2, AdrenoDisplay) and the Metal plug-in (AdrenoMetal) |
-| `gpu/air2ir3/` | The AIR to Mesa ir3 shader compiler ([README](../gpu/air2ir3/README.md)) |
+| `gpu/air2ir3/` | The AIR to Mesa ir3 shader compiler ([gpu/air2ir3/README.md](../gpu/air2ir3/README.md)) |
 | `drivers/` | Guest kexts: boot framebuffer, I2C HID input, QCC2072 Wi-Fi, a minimal test kext |
 | `config/` | Guest and monitor configuration |
 | `build/build-auxkc.py`, `build/kmutil-auxkc.sh` | The auxiliary kext collection (AuxKC) build steps; see [BUILDING.md](BUILDING.md) |

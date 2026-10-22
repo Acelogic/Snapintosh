@@ -6,8 +6,8 @@ firmware bundle), the guest ABI the monitor implements, and the host resources
 it runs on, and what is needed before a second guest or host is supported.
 
 The current proof target is the stock J700 `mac17p` kernelcache from macOS 27
-build 26A428 on the Snapdragon X2E. That is one qualified input bundle, not a
-promise that every XNU kernelcache or Arm CPU boots.
+build 26A428 on the Snapdragon X2E. Platform contracts and verification are
+strictly bound to this specific qualified input bundle.
 
 ## Three boundaries
 

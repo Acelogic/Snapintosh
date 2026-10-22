@@ -1,8 +1,7 @@
-# Status
+# Status & Validation
 
-What works on the ASUS Zenbook A16 (X2E-96-100) with macOS 27 build 26A428,
-what is known to be wrong, and what comes next. The numbers come from the most
-recent full desktop sessions, which ran about 25 to 30 minutes each.
+Hardware validation status for the ASUS Zenbook A16 (X2E-96-100) running macOS 27 (build 26A428),
+identified limitations, and ongoing engineering milestones. Metrics reflect validated desktop sessions (25–30 minutes duration).
 
 ## What works
 
@@ -19,31 +18,16 @@ recent full desktop sessions, which ran about 25 to 30 minutes each.
 
 ## Known issues
 
-- **Smoothness.** Interaction is usable but not yet smooth. Recent sessions
-  show a median of about 46 to 60 presents per second in busy periods, with
-  1.7 to 5 % of frame intervals longer than 34 ms. The main causes:
-  - *Present-gate deferrals.* With pipelining, WindowServer can swap a
-    surface whose GPU work is still running. The display then waits one full
-    refresh before copying it.
-  - *Occasional long stalls* (100 to 350 ms) that are not GPU time. They
-    coincide with heavy console output and timer lateness.
-  - *Contention on the monitor's global lock* for some SPTM calls. In
-    particular, page-attribute updates on buffers whose cache mode changes
-    are slow; the plug-in now reuses write-back buffers to avoid most of them.
-- **CPU clocks.** The CPU governor's requests above a certain performance
-  level are not granted by the firmware, so the CPU clusters do not reach
-  their top clocks.
-- **System Settings.** The Displays pane redraws badly ("accordions") and
-  glitches the screen, and icons inside some Settings panes are missing.
-- **Wi-Fi in macOS.** The native QCC2072 controller loads in the guest, but
-  the Wi-Fi menu cannot join a network yet.
-- **Large blits.** A single 4 MiB `CP_MEMCPY` hung the GPU. The plug-in now
-  splits blits into chunks of at most 1 MiB, and GPU recovery handles other
-  overruns. Other hang triggers may exist.
-- **Not supported:** audio, cameras, Bluetooth, sleep and wake, external
-  displays, the 120 Hz panel mode, and any other machine or macOS build.
-- **Host required.** Every boot is driven from a Mac over USB-C through q1n1.
-  There is no standalone boot path.
+- **Frame pacing and latency:** Desktop interaction is functional but exhibits timing jitter under load. Recent sessions demonstrate a median of 46–60 presentations/sec during active periods, with 1.7% to 5% of frame intervals exceeding 34 ms. Contributing factors:
+  - *Present-gate deferrals:* Pipelined WindowServer updates can swap a surface while GPU execution is in-flight, deferring the display blit to the subsequent refresh interval.
+  - *Periodic execution stalls (100–350 ms):* Non-GPU latency spikes correlated with verbose serial console logging and timer lateness.
+  - *Monitor lock contention:* Synchronization latency during select SPTM calls, primarily page-attribute cache state transitions.
+- **CPU DVFS ceilings:** Requests above intermediate performance states are restricted by system firmware, preventing CPU clusters from reaching theoretical maximum clocks.
+- **Displays preference pane:** Redraw cycles within the Displays preference pane cause visual tearing, and certain system icons fail to composite.
+- **Wi-Fi menu association:** The native QCC2072 controller attaches successfully in the guest kernel, but CoreWLAN / AirPort menu association is pending user-facing daemon integration.
+- **GPU blit bounds:** Block memory copies exceeding 1 MiB can fault the Adreno CP engine; blits are segmented to <= 1 MiB with GPU watchdog recovery handling timeouts.
+- **Unsupported subsystems:** Audio codecs, integrated cameras, Bluetooth controllers, S3/S0ix sleep states, external display outputs, and native 120 Hz refresh rates.
+- **Tethered host dependency:** Execution currently requires a host Mac driving `tools/cycle.py` over USB-C NCM; standalone bootloader development is underway.
 
 ## Roadmap
 

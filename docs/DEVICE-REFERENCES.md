@@ -1,10 +1,9 @@
 # External references
 
-Snapintosh models Apple devices at EL2 and drives Qualcomm hardware from its
-own code. This document lists the external projects used as references, what
-each was used for, and the limits of that use. A reference driver describes
-one side of a protocol; an emulated device must implement the other side, so
-none of these is a drop-in model.
+> [!NOTE]
+> External references provide architectural specification and protocol contracts only.
+> Emulated device models implement host-side device logic independently; a reference driver
+> describes one side of a protocol while the hypervisor implements the counterpart device contract.
 
 | Project | URL | Used for |
 | --- | --- | --- |

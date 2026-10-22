@@ -8,7 +8,7 @@ rejected.
 
 The kernel is Apple's stock J700 kernelcache for macOS 27 build 26A428
 (`com.apple.kernel` UUID `F9F468D7-1F50-354A-BECD-6BD6C1C834AD`). See
-[../README.md](../README.md) for the project overview.
+[README.md](../README.md) for the project overview.
 
 ## Policy
 

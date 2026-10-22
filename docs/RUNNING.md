@@ -3,8 +3,9 @@
 This document walks through one boot of the installed macOS on the A16, driven
 from the Mac with `tools/cycle.py`. Placeholders are in angle brackets.
 
-> Read the warning in the [README](../README.md) first. A run programs the GPU,
-> clocks and memory-bandwidth votes, and the guest writes the internal SSD.
+> [!WARNING]
+> Review the safety disclosures in [README.md](../README.md). A boot cycle directly programs SoC clocks,
+> GPU operating points, and memory-bandwidth votes, and permits guest writes to internal storage.
 
 ## Before the first run
 

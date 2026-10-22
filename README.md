@@ -69,27 +69,23 @@ flowchart TD
     HOST["Mac host: tools/cycle.py, q1n1 proxy client"] -. USB-C NCM .-> Q1N1
 ```
 
-```
-A16 UEFI -> q1n1 (EL2 proxy) -> Snapintosh monitor (EL2) -> XNU + AuxKC (EL1) -> userspace + Metal plug-in (EL0)
-```
-
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains each layer.
 
 ## Repository layout
 
 | Path | Contents |
 | --- | --- |
-| `compat/` | the EL2 monitor: SPTM/TXM contracts, CPU, interrupt, timer and device emulation, the GPU ring and SMMU mediation, the NVMe backend |
-| `shadow/` | the page-table walker and the 16 KiB guest to 4 KiB hardware shadow tables |
-| `probes/` | the code that runs on the target (loader, monitor entry) and the host-side image builder and runner |
-| `tools/` | firmware acquisition, kernelcache analysis, the boot-cycle tool (`cycle.py`), build helpers and the native test suites |
-| `gpu/adreno-kext/` | the AdrenoX2 kext (`kext/`), the AdrenoMetal plug-in (`plugin/`) and the shared register and contract headers |
-| `gpu/air2ir3/` | the AIR to ir3 shader compiler ([README](gpu/air2ir3/README.md)) |
-| `gpu/agx*` | an earlier virtual-AGX model, kept for reference |
-| `drivers/` | smaller kexts: SnapI2CHID (`snap-i2c-hid/`), the QCC2072 Wi-Fi controller (`snap-qcc2072/`), the boot framebuffer, a loader test |
-| `config/` | monitor feature flags and guest launchd jobs |
-| `build/` | generated output (gitignored, apart from the AuxKC link helpers) |
-| `docs/` | design and reference documentation |
+| `compat/` | EL2 hypervisor monitor: SPTM/TXM contracts, CPU, interrupt/timer emulation, GPU ring/SMMU mediation, NVMe backend |
+| `shadow/` | Page-table translation: 16 KiB guest to 4 KiB hardware shadow tables |
+| `probes/` | Target loader, monitor entrypoint, and host-side image orchestrator |
+| `tools/` | Firmware acquisition, kernelcache analysis, cycle tool (`cycle.py`), and native test suites |
+| `gpu/adreno-kext/` | AdrenoX2 kext (`kext/`), AdrenoMetal plug-in (`plugin/`), and shared register contracts |
+| `gpu/air2ir3/` | AIR to Mesa ir3 shader compiler ([README](gpu/air2ir3/README.md)) |
+| `gpu/agx*` | Retained virtual-AGX reference implementation |
+| `drivers/` | Peripheral kexts: SnapI2CHID (I2C-HID input), SnapintoshQCC2072 (Wi-Fi), and boot framebuffer |
+| `config/` | Monitor feature flags and guest launchd manifests |
+| `build/` | Generated build outputs (gitignored, excluding AuxKC link helpers) |
+| `docs/` | Technical specifications, architecture, and reference documentation |
 
 ## Building
 
@@ -105,9 +101,9 @@ You need:
 
 [docs/BUILDING.md](docs/BUILDING.md) has the steps.
 
-## Bring your own Apple software
+## Proprietary Software & Firmware Inputs
 
-This repository ships **no Apple, Qualcomm or ASUS binaries or firmware**. You
+This repository distributes **no proprietary Apple, Qualcomm, or ASUS binaries or firmware**. You
 supply them yourself:
 
 - **The macOS 27 restore image (IPSW).** Download it from Apple with
@@ -124,22 +120,11 @@ supply them yourself:
 The project depends on Apple software that each user must obtain and use under
 Apple's terms.
 
-## Warning
-
-Snapintosh is an experimental hypervisor that runs with full control of the
-machine.
-
-- **It writes the internal NVMe SSD.** Installing macOS changes the partition
-  table, and the guest writes its own volumes. A bug can corrupt or destroy
-  data on the SSD, including the Windows installation. Back up everything
-  before you start, and keep a way to restore Windows.
-- It programs clocks, voltages, the GPU and memory-bandwidth votes directly.
-  The tools refuse to run on low battery and stop the run when the SoC gets
-  too hot (`--thermal-guard`), but those guards are not a guarantee.
-- It is not a supported or stable way to run macOS. Expect panics, hangs and
-  cold reboots.
-
-Use it at your own risk.
+> [!WARNING]
+> **Hardware Safety and Data Integrity Disclosure:**
+> - **Internal NVMe Storage:** Installing macOS modifies the GPT partition table and permits guest writes directly to NVMe storage. Always maintain a verified, restorable backup and record BitLocker recovery keys before execution.
+> - **Direct Hardware Control:** The hypervisor directly programs SoC clocks, voltages, the Adreno GPU, and memory bus votes. Automated thermal guards (`--thermal-guard`) and battery thresholds are enforced, but hardware safety cannot be unconditionally guaranteed on bare-metal systems.
+> - **Development Status:** Experimental implementation. Kernel panics, hardware watchdogs, and unquiesced states are expected during development runs.
 
 ## Legal
 

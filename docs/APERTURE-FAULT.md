@@ -1,10 +1,8 @@
 # The aperture fault: a diagnosis write-up
 
-**Historical (September 2026).** This records how one early boot stop was
-diagnosed, when stock XNU answered about ten monitor calls and then died
-dereferencing NULL. The layout values belong to that point in bring-up; the
-current design is in [BOOT-CHAIN.md](BOOT-CHAIN.md). It is kept because the
-reasoning, including the wrong turns, generalises.
+> [!NOTE]
+> **Historical Diagnostic Analysis:**
+> Case study documenting the root-cause diagnosis of early physical aperture boot faults during initial bring-up. The finalized memory architecture is detailed in [BOOT-CHAIN.md](BOOT-CHAIN.md).
 
 ## The symptom
 
