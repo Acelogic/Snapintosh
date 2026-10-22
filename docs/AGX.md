@@ -1,14 +1,8 @@
 # A virtual Apple AGX GPU (historical, superseded)
 
-**Superseded.** This was an early design for graphics: present the stock
-`AGXG17P` driver with a virtual Apple GPU and do the work on the Adreno
-behind it. It never ran on the Snapdragon. The project instead uses its own
-native Adreno stack: the AdrenoX2 IOGPU kext with AdrenoDisplay, the
-AdrenoMetal plug-in, and the air2ir3 shader compiler (see
-[ARCHITECTURE.md](ARCHITECTURE.md) and
-[air2ir3](../gpu/air2ir3/README.md)). The analysis is kept because it explains
-why that route was taken, and because the AGX device-tree and UAT findings
-remain accurate for this kernelcache.
+> [!NOTE]
+> **Superseded Architectural Reference:**
+> This document details the initial prototype evaluating a virtual Apple AGX GPU abstraction. The production stack uses the native Adreno pipeline ([ARCHITECTURE.md](ARCHITECTURE.md)). This analysis is retained for its accurate hardware documentation of Apple's UAT and AGX device-tree contracts.
 
 Target was `j700ap` / T8140 / G17P, `kernelcache.release.mac17p` (`26A428`).
 

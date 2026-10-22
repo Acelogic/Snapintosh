@@ -111,7 +111,7 @@ personality names it with `MetalPluginName`. The plug-in implements the device,
 resources, render, blit and compute encoders and pipelines. It encodes Adreno
 a8xx command streams (indirect buffers, IBs) and hands them to the kernel as
 IOGPU command buffers. Shaders arrive as AIR. The air2ir3 compiler
-([../gpu/air2ir3/README.md](../gpu/air2ir3/README.md)) turns them into ir3
+([gpu/air2ir3/README.md](../gpu/air2ir3/README.md)) turns them into ir3
 machine code. Compiled shaders are cached on disk per user, and a precompiled
 pack can be linked into the bundle. Staging memory for uniforms and copies
 comes from size-classed arenas that return GPU address space when idle. Large

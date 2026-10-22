@@ -1,8 +1,8 @@
 # Building
 
-All builds run on a Mac. Nothing here touches the A16; booting is covered in
-[RUNNING.md](RUNNING.md). Run every command from the repository root unless
-stated otherwise.
+> [!NOTE]
+> All build steps execute on the host Mac. Target execution on the A16 is documented in
+> [RUNNING.md](RUNNING.md). Run all commands from the repository root unless specified otherwise.
 
 ## Prerequisites
 
