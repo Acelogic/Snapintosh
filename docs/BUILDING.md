@@ -48,8 +48,8 @@ classes. They need headers that reconstruct those class layouts for build
 | Header | Directory | How to produce it |
 | --- | --- | --- |
 | `IOMobileGraphicsFamily26A428.h` | `gpu/adreno-kext/kext/include/` | `python3 tools/gen-iomfb-header.py --kc downloads/extracted/j700ap/kernelcache.release.mac17p` (reads the KDK at its default path; `--kdk` changes it) |
-| `IOGPUFamily26A428.h` | `gpu/adreno-kext/kext/include/` | reconstruct from your KDK (see the class layouts the build expects) |
-| `IO80211Controller26A428.h`, `IO80211Interface26A428.h`, `IO80211WorkQueue26A428.h`, `IOSkywalkLifecycle26A428.h` | `drivers/snap-qcc2072/include/` | reconstruct from your KDK (see the class layouts the build expects), using the output of `drivers/snap-qcc2072/re/recover-controller-abi.py` |
+| `IOGPUFamily26A428.h` | `gpu/adreno-kext/kext/include/` | reconstruct from your KDK; step-by-step recipe in [AGENTS.md](../AGENTS.md#recipe-a-header-for-a-private-apple-c-class-arm64e) |
+| `IO80211Controller26A428.h`, `IO80211Interface26A428.h`, `IO80211WorkQueue26A428.h`, `IOSkywalkLifecycle26A428.h` | `drivers/snap-qcc2072/include/` | reconstruct from your KDK; step-by-step recipe in [AGENTS.md](../AGENTS.md#recipe-a-header-for-a-private-apple-c-class-arm64e), using the output of `drivers/snap-qcc2072/re/recover-controller-abi.py` |
 
 `gpu/adreno-kext/kext/build.sh` and `drivers/snap-qcc2072/build.sh` stop with
 an error that names any missing header.
