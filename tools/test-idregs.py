@@ -53,7 +53,14 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 HEADER = (ROOT / 'probes/idregs.h').read_text()
 SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
-LLVM = Path('/opt/homebrew/opt/llvm/bin')
+_LLVM_BIN = os.environ.get('LLVM_BIN')
+if _LLVM_BIN:
+    LLVM = Path(_LLVM_BIN)
+elif Path('/opt/homebrew/opt/llvm/bin/llvm-mc').exists():
+    LLVM = Path('/opt/homebrew/opt/llvm/bin')
+else:
+    _mc = shutil.which('llvm-mc')
+    LLVM = Path(_mc).parent if _mc else Path('/usr/bin')
 
 # The allocated AArch64 ID registers of op0=3, op1=0, CRn=0, by (CRm, op2): Arm ARM (DDI 0487), the AArch64
 # System register index. Everything else in CRm 0-7 is unallocated (CRm=0) or reserved (CRm 1-7).
@@ -222,7 +229,8 @@ class Source(unittest.TestCase):
         self.assertEqual(SOURCE.count(HANDLER), 1)
         branch = SOURCE[SOURCE.index('if (op0 == 3 && op1 == 0 && crn == 0 && crm < 8 && (iss & 1)) {'):]
         self.assertTrue(branch[:200].split('\n')[1].strip() == HANDLER)
-        forge = SOURCE[SOURCE.index('static uint64_t id_forge(uint32_t crm, uint32_t op2, uint64_t value)\n{'):]
+        forge_src = HEADER if 'static uint64_t id_forge(' in HEADER else SOURCE
+        forge = forge_src[forge_src.index('static uint64_t id_forge(uint32_t crm, uint32_t op2, uint64_t value)\n{'):]
         forge = forge[:forge.index('\n}\n')]
         pairs = {(int(a), int(b)) for a, b in re.findall(r'crm == (\d) && op2 == (\d)', forge)}
         self.assertEqual(pairs, {(4, 0), (4, 1), (4, 4), (4, 5)})

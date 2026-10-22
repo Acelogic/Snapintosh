@@ -5984,7 +5984,6 @@ int xnuboot_async(uint64_t elr, uint64_t which, const uint64_t *frame)
  * word and the host reads it as a signed 64-bit value, so a 32-bit -6 arrives
  * as 0x00000000fffffffa and reads as an EL2 fault with a nonsense ESR. */
 static int64_t vcpu_arch_prepare(struct context *c);
-static uint64_t id_forge(uint32_t crm,uint32_t op2,uint64_t value);
 static int secondary_prepare_records(struct context *c);
 int64_t xnuboot_prepare(void);
 static int pauth_domain_prepare(struct context *c)
@@ -9715,24 +9714,6 @@ static int multipage_fast(struct context *c,const struct sptm_multipage_plan *pl
 #define SR_CONST_LOWER   SYSREG(3, 0, 11, 1, 2)
 #define SR_CONST_UPPER   SYSREG(3, 0, 11, 1, 3)
 
-/* Features this machine does not have, cleared out of the ID registers.
- *
- * XNU believes what the ID registers say and then uses it. Left alone, the
- * Snapdragon advertises SME, so XNU wrote SMCR_EL1 and then `msr TPIDR2_EL0,
- * xzr` at 0xfffffe000c245030 -- undefined here, and delivered to EL1 where we
- * cannot see it. Every feature we cannot actually support has to be denied at
- * the source rather than caught after the fact. */
-#define ID_AA64PFR0_EL1_SVE  (0xfUL << 32)
-#define ID_AA64PFR1_EL1_SME  (0xfUL << 24)
-
-static uint64_t id_forge(uint32_t crm, uint32_t op2, uint64_t value)
-{
-    if (crm == 4 && op2 == 0) value &= ~ID_AA64PFR0_EL1_SVE;   /* ID_AA64PFR0 */
-    if (crm == 4 && op2 == 1) value &= ~ID_AA64PFR1_EL1_SME;   /* ID_AA64PFR1 */
-    if (crm == 4 && op2 == 4) value = 0;                       /* ID_AA64ZFR0 */
-    if (crm == 4 && op2 == 5) value = 0;                       /* ID_AA64SMFR0 */
-    return value;
-}
 
 /* AMX is not optional to this kernel. `machine_routines_apple.c:165` decodes
  * AMXIDR_EL1 as a version: bits 0..5 select versions 1..6, anything set in bits
