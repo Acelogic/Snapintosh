@@ -37,8 +37,35 @@
 #ifndef ADRENO_PRESENT_CURSOR_STAGE
 #define ADRENO_PRESENT_CURSOR_STAGE 0
 #endif
+/* The live scanout is mapped as Device memory, where any unaligned access takes an alignment fault (a kernel
+ * panic). Cursor spans start at an arbitrary x, so they are only 4-byte aligned; for long spans (the enlarged
+ * shake-to-locate cursor is about 1.4 KiB per row) the kernel memcpy uses 16-byte stores that are then unaligned.
+ * -DADRENO_PRESENT_LIVE_ALIGNED=1 routes every copy that touches the scanout through adreno_display_live_copy:
+ * memcpy when both ends and the length are 16-byte aligned (whole rows), otherwise naturally aligned 8- and 4-byte
+ * accesses. OBSERVED on the A16 (26A428): the unaligned path panicked; the aligned path did not. Off by default. */
+#ifndef ADRENO_PRESENT_LIVE_ALIGNED
+#define ADRENO_PRESENT_LIVE_ALIGNED 0
+#endif
+#if ADRENO_PRESENT_LIVE_ALIGNED
+static inline void adreno_display_live_copy(void *dst, const void *src, size_t n)
+{
+    unsigned long d = (unsigned long)dst, s = (unsigned long)src;
+    if (((d | s | n) & 15) == 0) { memcpy(dst, src, n); return; }
+    if (((d ^ s) & 7) == 0)
+        for (; n >= 4 && ((d | s) & 7); d += 4, s += 4, n -= 4)
+            *(volatile uint32_t *)d = *(const volatile uint32_t *)s;
+    if (((d | s) & 7) == 0)
+        for (; n >= 8; d += 8, s += 8, n -= 8)
+            *(volatile uint64_t *)d = *(const volatile uint64_t *)s;
+    for (; n >= 4; d += 4, s += 4, n -= 4)
+        *(volatile uint32_t *)d = *(const volatile uint32_t *)s;
+}
+#define ADRENO_DISPLAY_LIVE_WRITE(dst, src, n) adreno_display_live_copy((dst), (src), (n))
+#else
+#define ADRENO_DISPLAY_LIVE_WRITE(dst, src, n) memcpy((dst), (src), (n))
+#endif
 #if ADRENO_PRESENT_CURSOR_STAGE && !defined(ADRENO_DISPLAY_LIVE_READ)
-#define ADRENO_DISPLAY_LIVE_READ(dst, src, n) memcpy((dst), (src), (n))
+#define ADRENO_DISPLAY_LIVE_READ(dst, src, n) ADRENO_DISPLAY_LIVE_WRITE((dst), (src), (n))
 #endif
 
 #ifdef __cplusplus
@@ -292,7 +319,7 @@ static inline int adreno_display_present(struct adreno_display_cursor *c,
                 uint64_t srcEnd=(source && a<plan.width)?(b<plan.width?b:plan.width):a;
                 if(!hasOld && !hasNew) {
                     /* Only the source span: stage to scanout. */
-                    if(srcEnd>a)memcpy(live,stage+a*4,(size_t)((srcEnd-a)*4));
+                    if(srcEnd>a)ADRENO_DISPLAY_LIVE_WRITE(live,stage+a*4,(size_t)((srcEnd-a)*4));
                 } else {
                     uint8_t *dst=ws->row;
 #if ADRENO_PRESENT_CURSOR_STAGE
@@ -308,7 +335,7 @@ static inline int adreno_display_present(struct adreno_display_cursor *c,
                     if(bgEnd>a)memcpy(dst,stage+a*4,(size_t)((bgEnd-a)*4));
 #else
                     /* P24: the live scanout is read only where the source does not rewrite it. */
-                    if(srcEnd<b)memcpy(dst+(srcEnd-a)*4,live+(srcEnd-a)*4,(size_t)((b-srcEnd)*4));
+                    if(srcEnd<b)ADRENO_DISPLAY_LIVE_WRITE(dst+(srcEnd-a)*4,live+(srcEnd-a)*4,(size_t)((b-srcEnd)*4));
                     if(hasOld)memcpy(dst+(c->sx-a)*4,c->save+(y-c->sy)*c->sw*4,(size_t)(c->sw*4));
                     if(srcEnd>a)memcpy(dst,stage+a*4,(size_t)((srcEnd-a)*4));
 #endif
@@ -318,7 +345,7 @@ static inline int adreno_display_present(struct adreno_display_cursor *c,
                         memcpy(under,dst+(nx-a)*4,(size_t)(nw*4));
                         adreno_display_blend_row(c->image+(line*c->width+col)*4,under,dst+(nx-a)*4,nw);
                     }
-                    memcpy(live,dst,(size_t)((b-a)*4));
+                    ADRENO_DISPLAY_LIVE_WRITE(live,dst,(size_t)((b-a)*4));
                 }
                 result.bytes_written+=(b-a)*4;result.regions++;
                 if(ops->observe)ops->observe(ops->observer,a,y,b-a);

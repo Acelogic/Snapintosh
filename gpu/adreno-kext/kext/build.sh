@@ -13,7 +13,10 @@ for h in $(cat "$D"/src/* "$D"/include/*.h "$D"/../include/*.h 2>/dev/null | sed
     [ -f "$D/include/$h" ] || { echo "error: missing $D/include/$h (reconstructed from Apple's KDK 26A428, not distributed; generate it from your KDK)" >&2; exit 2; }
 done
 mkdir -p "$OBJ"
-COMMON="-target arm64e-apple-macos27.0 -isysroot $SDK -mkernel -nostdinc -I$KH -I$D/include -I$D/../include -DKERNEL -DAPPLE -DNeXT -O2 -g -Wall -Werror -Wno-unused-private-field -fno-common"
+# Copies into the live scanout (Device memory) must stay naturally aligned: an unaligned store there is an
+# alignment fault, i.e. a kernel panic (see AdrenoDisplayPresent.h).
+FIXES="-DADRENO_PRESENT_LIVE_ALIGNED=1"
+COMMON="$FIXES -target arm64e-apple-macos27.0 -isysroot $SDK -mkernel -nostdinc -I$KH -I$D/include -I$D/../include -DKERNEL -DAPPLE -DNeXT -O2 -g -Wall -Werror -Wno-unused-private-field -fno-common"
 CXXF="$COMMON -std=gnu++17 -fapple-kext -fno-exceptions -fno-rtti -Wno-inconsistent-missing-override"
 xcrun clang++ $CXXF -c "$D/src/AdrenoX2.cpp" -o "$OBJ/AdrenoX2.o"
 xcrun clang++ $CXXF -c "$D/src/AdrenoMemoryMap.cpp" -o "$OBJ/AdrenoMemoryMap.o"
