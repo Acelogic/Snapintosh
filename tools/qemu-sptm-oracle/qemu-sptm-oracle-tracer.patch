@@ -1,0 +1,465 @@
+SPDX-License-Identifier: GPL-2.0-or-later
+A patch to QEMU as forked in https://github.com/jprx/qemu-sptm (2867d847d347);
+licensed like the files it modifies. See LICENSE in this directory.
+
+--- a/hw/arm/apple_regs.c	2026-09-24 19:08:51
++++ b/hw/arm/apple_regs.c	2026-09-24 19:09:53
+@@ -11,6 +11,7 @@
+ #include "system/system.h"
+ #include "xnu/apple_regs.h"
+ #include "hw/arm/apple_amcc.h"
++#include "tcg/sptm-trace.h"
+ 
+ typedef uint64_t usize;
+ typedef uint64_t u64;
+--- a/hw/arm/xnuboot_sptm.c	2026-09-24 19:08:51
++++ b/hw/arm/xnuboot_sptm.c	2026-09-24 19:21:47
+@@ -56,6 +56,9 @@
+ #ifdef DEBUG_MEMORY_LAYOUT
+     printf("%16s:\t0x%016llX (0x%016llX)\n", reg_name, map_prop[0], map_prop[1]);
+ #endif // DEBUG_MEMORY_LAYOUT
++    if (getenv("QEMU_SPTM_TRACE_LAYOUT"))
++        fprintf(stderr, "LAYOUT %s 0x%016llX 0x%016llX\n", reg_name,
++                (unsigned long long)map_prop[0], (unsigned long long)map_prop[1]);
+ }
+ 
+ static trust_cache_offsets_t get_tcinfo(void) {
+@@ -338,6 +341,21 @@
+         blob_head += info->ramdisk_f.len;
+         blob_head = ROUND_NEXT_PAGE(blob_head);
+         END_ENTRY("RAMDisk");
++    }
++
++    // Optional IOKit RAM image (Snapintosh's --ramdisk-mode iokit contract):
++    // if the tree carries /chosen/boot-ramdmg-extents and boot-ramdmg-size
++    // placeholders, point them at the loaded image so IOFindBSDRoot's
++    // di_root_ramfile creates IOKit media and APFS imports the root hash.
++    {
++        struct dtree_node *chosen = adt_find_node((struct dtree_node*)dtree, "chosen");
++        u64 *ext = chosen ? adt_get_prop_val(chosen, "boot-ramdmg-extents") : NULL;
++        u64 *sz = chosen ? adt_get_prop_val(chosen, "boot-ramdmg-size") : NULL;
++        if (ext && sz) {
++            ext[0] = rd_base_phys;
++            ext[1] = info->ramdisk_f.len;
++            sz[0] = info->ramdisk_f.len;
++        }
+     }
+ 
+ #undef PUSH_SEG
+@@ -441,6 +459,18 @@
+ 
+     info->init_pc = vtop(&sptm_mi, sptm_mi.entrypoint);
+     info->init_x0 = args_base_phys;
++    if (getenv("QEMU_SPTM_TRACE_LAYOUT")) {
++        uint64_t sptm_load = args.virtBase - args.physBase + sptm_mi.physlo;
++        fprintf(stderr, "LAYOUT virtBase 0x%016llX physBase 0x%016llX sptm_va 0x%016llX "
++                "sptm_link 0x%016llX txm_va 0x%016llX bkc_va 0x%016llX bkc_link 0x%016llX "
++                "top 0x%016llX\n",
++                (unsigned long long)args.virtBase, (unsigned long long)args.physBase,
++                (unsigned long long)sptm_load, (unsigned long long)sptm_mi.virtlo,
++                (unsigned long long)(sptm_load + SPTM_EXPECTED_STRIDE),
++                (unsigned long long)(sptm_load + 2 * SPTM_EXPECTED_STRIDE),
++                (unsigned long long)bkc_mi.virtlo,
++                (unsigned long long)args.topOfKernelData);
++    }
+ }
+ 
+ static void arm_load_xnu_nosptm(ARMCPU *cpu, MachineState *ms, struct xnu_boot_info *info) {
+--- a/scripts/darwin/dumpregs.py	2026-09-24 19:08:54
++++ b/scripts/darwin/dumpregs.py	2026-09-24 19:10:58
+@@ -194,8 +194,9 @@
+ 
+ macros = '''
+ #define OPAQUE_SYSREG_ACCESSORS(n) \\
+-static uint64_t n##_read(CPUARMState *env, const ARMCPRegInfo *ri) { return APPLE_STATE(env)->n; } \\
+-static void n##_write(CPUARMState *env, const ARMCPRegInfo *ri, uint64_t val) { APPLE_STATE(env)->n = val; }
++static unsigned n##_rcount, n##_wcount; \\
++static uint64_t n##_read(CPUARMState *env, const ARMCPRegInfo *ri) { sptm_trace_sysreg(env, #n, 0, 0, APPLE_STATE(env)->n, &n##_rcount); return APPLE_STATE(env)->n; } \\
++static void n##_write(CPUARMState *env, const ARMCPRegInfo *ri, uint64_t val) { sptm_trace_sysreg(env, #n, 1, APPLE_STATE(env)->n, val, &n##_wcount); APPLE_STATE(env)->n = val; }
+ '''
+ 
+ def decode_name(regname):
+@@ -224,9 +225,9 @@
+     if is_cpustate:
+         if is_banked:
+             if "_GL" in r:
+-                s += f"        .fieldoffset = offsetof(CPUARMState, {(r.split("_GL")[0]+"_gl").lower()}[{el}]),\n"
++                s += f"        .fieldoffset = offsetof(CPUARMState, {(r.split('_GL')[0]+'_gl').lower()}[{el}]),\n"
+             elif "_EL" in r:
+-                s += f"        .fieldoffset = offsetof(CPUARMState, {(r.split("_EL")[0]+"_el").lower()}[{el}]),\n"
++                s += f"        .fieldoffset = offsetof(CPUARMState, {(r.split('_EL')[0]+'_el').lower()}[{el}]),\n"
+             else:
+                 raise ValueError("banked register isn't GL or EL")
+         else:
+--- a/target/arm/helper.c	2026-09-24 19:08:52
++++ b/target/arm/helper.c	2026-09-24 19:09:53
+@@ -36,6 +36,7 @@
+ #include "target/arm/gtimer.h"
+ #include "qemu/plugin.h"
+ #include "xnu/apple_regs.h"
++#include "tcg/sptm-trace.h"
+ 
+ static void switch_mode(CPUARMState *env, int mode);
+ #ifndef CONFIG_USER_ONLY
+@@ -9407,6 +9408,10 @@
+ 
+     if (arm_apple_is_gl(env)) {
+         addr = env->vbar_gl[new_el];
++        if (cs->exception_index != EXCP_IRQ && cs->exception_index != EXCP_FIQ &&
++            cs->exception_index != EXCP_VIRQ && cs->exception_index != EXCP_VFIQ) {
++            sptm_trace_gl_exception(env, cs->exception_index, new_el);
++        }
+     }
+ 
+     env->aspsr_gl[new_el] = env->currentg;
+@@ -9556,6 +9561,7 @@
+     case EXCP_GENTER:
+         assert(0 == env->currentg);
+         assert(env->aarch64);
++        sptm_trace_genter(env, cur_el);
+         env->aspsr_gl[new_el] = env->currentg;
+         env->currentg = 1;
+         env->esr_gl[new_el] = env->exception.syndrome;
+--- a/target/arm/tcg/meson.build	2026-09-24 19:08:51
++++ b/target/arm/tcg/meson.build	2026-09-24 19:09:53
+@@ -41,6 +41,7 @@
+   'translate-sve.c',
+   'translate-sme.c',
+   'translate-gxf.c',
++  'sptm-trace.c',
+   'helper-a64.c',
+   'mte_helper.c',
+   'pauth_helper.c',
+--- a/target/arm/tcg/sptm-trace.c	1969-12-31 19:00:00
++++ b/target/arm/tcg/sptm-trace.c	2026-09-24 19:42:47
+@@ -0,0 +1,298 @@
++/*
++ * SPTM/TXM call tracer for qemu-sptm (oracle for Snapintosh).
++ *
++ * Enabled by QEMU_SPTM_TRACE=<path>. One text line per event:
++ *
++ *   G <seq> el=<n> pc=<elr> x16=<x16> a=<x0>,...,<x7> [extra]
++ *        a genter (XNU -> SPTM/TXM). extra depends on the endpoint:
++ *          rec=<24-byte records as root,va,pte;...>   UPDATE/UNMAP_DISJOINT
++ *          tpl=<pte,...>                               UPDATE_REGION templates
++ *          old=<va>:<level>:<leaf pte>;...             leaf PTEs before the call
++ *   X <seq> r=<x0>,<x1> [new=<va>:<level>:<pte>;...] [sprr=...]
++ *        the matching gexit, with the same leaves re-walked after the call.
++ *   F <seq?> el=<n> excp=<idx> esr=<syn> far=<va> pc=<pc>
++ *        a synchronous exception taken while in GL (SPTM/TXM fault).
++ *   R <name> <w|r> <value> gl=<0|1> pc=<pc>
++ *        Apple IMPDEF sysreg access (first reads, every changing write).
++ *
++ * Page tables are walked with the 16K granule and a 47-bit input range
++ * (T*SZ=17, start level 1), which is what the macOS 16K roots use; a
++ * 4K-format user root yields level=-1 entries (not decoded).
++ */
++#include "qemu/osdep.h"
++#include "cpu.h"
++#include "internals.h"
++#include "exec/memattrs.h"
++#include "system/address-spaces.h"
++#include "sptm-trace.h"
++#include "exec/cpu-common.h"
++#include "hw/core/cpu.h"
++
++static FILE *trace_f;
++static int trace_inited;
++static uint64_t trace_seq;
++
++#define TRACE_MAX_LEAVES 64
++struct trace_frame {
++    uint64_t seq, x16;
++    unsigned nleaves;
++    uint64_t root[TRACE_MAX_LEAVES], va[TRACE_MAX_LEAVES];
++};
++#define TRACE_DEPTH 8
++static struct trace_frame trace_stack[TRACE_DEPTH];
++static int trace_depth;
++static uint64_t last_pperm1 = ~0ULL, last_pperm2 = ~0ULL, last_uperm = ~0ULL;
++
++FILE *sptm_trace_file(void)
++{
++    if (!trace_inited) {
++        const char *p = getenv("QEMU_SPTM_TRACE");
++        trace_inited = 1;
++        if (p && *p) {
++            trace_f = fopen(p, "w");
++            if (trace_f) {
++                setvbuf(trace_f, NULL, _IOFBF, 1 << 20);
++            } else {
++                fprintf(stderr, "sptm-trace: cannot open %s\n", p);
++            }
++        }
++    }
++    return trace_f;
++}
++
++static bool rd64(uint64_t pa, uint64_t *v)
++{
++    return address_space_read(&address_space_memory, pa,
++                               MEMTXATTRS_UNSPECIFIED, v, 8) == MEMTX_OK;
++}
++
++/* Returns the leaf level (1..3) or -1; *pte receives the last descriptor. */
++static int walk16k(uint64_t root, uint64_t va, uint64_t *pte)
++{
++    uint64_t table = root & 0x0000ffffffffc000ULL, d = 0;
++    static const unsigned shift[4] = {0, 36, 25, 14};
++    *pte = 0;
++    if (!table) {
++        return -1;
++    }
++    for (int level = 1; level <= 3; level++) {
++        uint64_t idx = (va >> shift[level]) & 0x7ff;
++        if (!rd64(table + idx * 8, &d)) {
++            return -1;
++        }
++        *pte = d;
++        if (!(d & 1)) {
++            return level;           /* invalid at this level */
++        }
++        if (level < 3 && (d & 3) == 1) {
++            return level;           /* block */
++        }
++        if (level == 3) {
++            return 3;
++        }
++        table = d & 0x0000ffffffffc000ULL;
++    }
++    return -1;
++}
++
++static void add_leaf(struct trace_frame *t, uint64_t root, uint64_t va)
++{
++    if (t->nleaves < TRACE_MAX_LEAVES) {
++        t->root[t->nleaves] = root;
++        t->va[t->nleaves] = va;
++        t->nleaves++;
++    }
++}
++
++static void print_leaves(FILE *f, const char *tag, struct trace_frame *t)
++{
++    if (!t->nleaves) {
++        return;
++    }
++    fprintf(f, " %s=", tag);
++    for (unsigned i = 0; i < t->nleaves; i++) {
++        uint64_t pte;
++        int level = walk16k(t->root[i], t->va[i], &pte);
++        fprintf(f, "%s%" PRIx64 ":%d:%" PRIx64, i ? ";" : "", t->va[i], level, pte);
++    }
++}
++
++void sptm_trace_genter(CPUARMState *env, int el)
++{
++    FILE *f = sptm_trace_file();
++    if (!f) {
++        return;
++    }
++    uint64_t *x = env->xregs;
++    uint64_t x16 = x[16];
++    unsigned cmd = (x16 >> 56) & 0xff, domain = (x16 >> 48) & 0xff;
++    unsigned table = (x16 >> 32) & 0xffff, endpoint = (uint32_t)x16;
++    struct trace_frame dummy, *t = &dummy;
++
++    if (trace_depth < TRACE_DEPTH) {
++        t = &trace_stack[trace_depth];
++    }
++    trace_depth++;
++    memset(t, 0, sizeof(*t));
++    t->seq = ++trace_seq;
++    t->x16 = x16;
++
++    fprintf(f, "G %" PRIu64 " el=%d pc=%" PRIx64 " x16=%" PRIx64 " a=%" PRIx64
++            ",%" PRIx64 ",%" PRIx64 ",%" PRIx64 ",%" PRIx64 ",%" PRIx64
++            ",%" PRIx64 ",%" PRIx64, t->seq, el, env->pc, x16,
++            x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]);
++
++    if (cmd == 0 && domain == 0 && table == 0) {
++        switch (endpoint) {
++        case 6: /* UPDATE_DISJOINT(target, list, count, options) */
++        case 8: /* UNMAP_DISJOINT(target, list, count) */
++        {
++            uint64_t n = (uint32_t)x[2];
++            if (n && n <= 64) {
++                fprintf(f, " rec=");
++                for (uint64_t i = 0; i < n; i++) {
++                    uint64_t r = 0, v = 0, p = 0;
++                    rd64(x[1] + i * 24, &r);
++                    rd64(x[1] + i * 24 + 8, &v);
++                    rd64(x[1] + i * 24 + 16, &p);
++                    fprintf(f, "%s%" PRIx64 ",%" PRIx64 ",%" PRIx64,
++                            i ? ";" : "", r, v, p);
++                    add_leaf(t, r, v);
++                }
++            }
++            break;
++        }
++        case 5: /* UPDATE_REGION(root, va, count, templates, options) */
++        {
++            uint64_t n = (uint32_t)x[2];
++            if (n && n <= 64) {
++                fprintf(f, " tpl=");
++                for (uint64_t i = 0; i < n; i++) {
++                    uint64_t p = 0;
++                    rd64(x[3] + i * 8, &p);
++                    fprintf(f, "%s%" PRIx64, i ? "," : "", p);
++                    add_leaf(t, x[0], x[1] + i * 0x4000);
++                }
++            }
++            break;
++        }
++        case 7: /* UNMAP_REGION(root, va, count, options) */
++        {
++            uint64_t n = (uint32_t)x[2];
++            for (uint64_t i = 0; i < n && i < TRACE_MAX_LEAVES; i++) {
++                add_leaf(t, x[0], x[1] + i * 0x4000);
++            }
++            break;
++        }
++        case 2: /* MAP_PAGE(root, va, pte) */
++            add_leaf(t, x[0], x[1]);
++            break;
++        default:
++            break;
++        }
++    }
++    print_leaves(f, "old", t);
++    fputc('\n', f);
++}
++
++static void dump_va(FILE *f, CPUARMState *env, const char *tag, uint64_t va,
++                    unsigned words)
++{
++    uint64_t buf[0x100];
++    if (words > 0x100) {
++        words = 0x100;
++    }
++    if (cpu_memory_rw_debug(env_cpu(env), va, buf, words * 8, false)) {
++        fprintf(f, "H %s va=%" PRIx64 " unreadable\n", tag, va);
++        return;
++    }
++    for (unsigned i = 0; i < words; i += 4) {
++        fprintf(f, "H %s +%03x %016" PRIx64 " %016" PRIx64 " %016" PRIx64
++                " %016" PRIx64 "\n", tag, i * 8, buf[i], buf[i + 1], buf[i + 2],
++                buf[i + 3]);
++    }
++}
++
++void sptm_trace_gexit(CPUARMState *env)
++{
++    FILE *f = sptm_trace_file();
++    static int handoff_dumped;
++    if (!f) {
++        return;
++    }
++    /* The first gexit leaves SPTM's bootstrap for XNU's entry point: record
++     * the handoff registers and the structures x1/x2 point to. */
++    if (!handoff_dumped) {
++        int el = arm_current_el(env);
++        handoff_dumped = 1;
++        fprintf(f, "H entry elr=%" PRIx64 " spsr=%" PRIx64 " x0=%" PRIx64
++                " x1=%" PRIx64 " x2=%" PRIx64 " x3=%" PRIx64 " x4=%" PRIx64
++                " ttbr0=%" PRIx64 " ttbr1=%" PRIx64 " tcr=%" PRIx64
++                " sctlr=%" PRIx64 " hcr=%" PRIx64 " vbar=%" PRIx64 "\n",
++                env->elr_gl[el], env->spsr_gl[el], env->xregs[0], env->xregs[1],
++                env->xregs[2], env->xregs[3], env->xregs[4], env->cp15.ttbr0_el[2],
++                env->cp15.ttbr1_el[2], env->cp15.tcr_el[2], env->cp15.sctlr_el[2],
++                env->cp15.hcr_el2, env->cp15.vbar_el[2]);
++        dump_va(f, env, "x1", env->xregs[1], 0x60);
++        dump_va(f, env, "x2", env->xregs[2], 0x70);
++    }
++    struct trace_frame *t = NULL;
++    if (trace_depth > 0) {
++        trace_depth--;
++        if (trace_depth < TRACE_DEPTH) {
++            t = &trace_stack[trace_depth];
++        }
++    }
++    fprintf(f, "X %" PRIu64 " r=%" PRIx64 ",%" PRIx64, t ? t->seq : 0,
++            env->xregs[0], env->xregs[1]);
++    if (t) {
++        print_leaves(f, "new", t);
++    }
++    if (env->sprr_pperm_el[1] != last_pperm1 || env->sprr_pperm_el[2] != last_pperm2 ||
++        env->sprr_uperm_el0 != last_uperm) {
++        last_pperm1 = env->sprr_pperm_el[1];
++        last_pperm2 = env->sprr_pperm_el[2];
++        last_uperm = env->sprr_uperm_el0;
++        fprintf(f, " sprr=pperm1:%" PRIx64 ",pperm2:%" PRIx64 ",uperm:%" PRIx64
++                ",cfg1:%" PRIx64 ",cfg2:%" PRIx64, last_pperm1, last_pperm2,
++                last_uperm, env->sprr_config_el[1], env->sprr_config_el[2]);
++    }
++    fputc('\n', f);
++}
++
++void sptm_trace_gl_exception(CPUARMState *env, int excp, int new_el)
++{
++    FILE *f = sptm_trace_file();
++    if (!f) {
++        return;
++    }
++    fprintf(f, "F %" PRIu64 " el=%d->%d excp=%d esr=%" PRIx64 " far=%" PRIx64
++            " pc=%" PRIx64 " x16=%" PRIx64 " a=%" PRIx64 ",%" PRIx64 ",%" PRIx64
++            ",%" PRIx64 "\n",
++            trace_depth > 0 && trace_depth <= TRACE_DEPTH ?
++                trace_stack[trace_depth - 1].seq : 0,
++            arm_current_el(env), new_el, excp, (uint64_t)env->exception.syndrome,
++            env->exception.vaddress, env->pc, env->xregs[16], env->xregs[0],
++            env->xregs[1], env->xregs[2], env->xregs[3]);
++}
++
++void sptm_trace_sysreg(CPUARMState *env, const char *name, int is_write,
++                       uint64_t old, uint64_t val, unsigned *count)
++{
++    FILE *f = sptm_trace_file();
++    if (!f) {
++        return;
++    }
++    /* QEMU's own reset/state-sync accessors run with pc == 0; skip them. */
++    if (env->pc == 0) {
++        return;
++    }
++    /* First 4 reads; every write that changes the value, capped at 256. */
++    if (is_write ? (old == val || *count >= 256) : *count >= 4) {
++        return;
++    }
++    (*count)++;
++    fprintf(f, "R %s %c %" PRIx64 " gl=%d el=%d pc=%" PRIx64 "\n", name,
++            is_write ? 'w' : 'r', val, (int)(env->currentg & 1),
++            arm_current_el(env), env->pc);
++}
+--- a/target/arm/tcg/sptm-trace.h	1969-12-31 19:00:00
++++ b/target/arm/tcg/sptm-trace.h	2026-09-24 19:09:53
+@@ -0,0 +1,10 @@
++#ifndef TARGET_ARM_SPTM_TRACE_H
++#define TARGET_ARM_SPTM_TRACE_H
++/* SPTM/TXM call tracer (QEMU_SPTM_TRACE=<path>); see sptm-trace.c. */
++FILE *sptm_trace_file(void);
++void sptm_trace_genter(CPUARMState *env, int el);
++void sptm_trace_gexit(CPUARMState *env);
++void sptm_trace_gl_exception(CPUARMState *env, int excp, int new_el);
++void sptm_trace_sysreg(CPUARMState *env, const char *name, int is_write,
++                       uint64_t old, uint64_t val, unsigned *count);
++#endif
+--- a/target/arm/tcg/translate-gxf.c	2026-09-24 19:08:52
++++ b/target/arm/tcg/translate-gxf.c	2026-09-24 19:09:53
+@@ -4,6 +4,7 @@
+ #include "translate.h"
+ #include "translate-a64.h"
+ #include "qemu/log.h"
++#include "sptm-trace.h"
+ #include <assert.h>
+ 
+ #include "decode-apple-gxf.c.inc"
+@@ -22,6 +23,8 @@
+     assert(1 == env->currentg);
+     assert(env->aarch64);
+ 
++    sptm_trace_gexit(env);
++
+     // Most of this is copied from HELPER(exception_return)
+     aarch64_save_sp(env, cur_el);
+ 

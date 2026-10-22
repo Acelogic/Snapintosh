@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Console diagnostics for the GUI bring-up (docs/ADRENO-DEPTH-STENCIL-20261017.md), next to
+  org.snapintosh.console-shell. Installed on the guest's Data volume as
+  /Library/LaunchDaemons/org.snapintosh.diag.plist (root:wheel 0644); inert without the boot
+  argument snapintosh_shell=1. It needs no input. Since v15 nothing user space writes to /dev/console reached the serial
+  capture in multi-user (v20's RAM scan shows launchd running both jobs), so every line goes to
+  /private/var/tmp/snap-diag.log, which the next single-user shell or a RAM scan reads; each poll also copies the tail to
+  /dev/console and to /dev/cu.debug-console (the UART's own node; busy while the single-user console holds it) in case
+  either path works.
+    diag: ...       the AdrenoMetal log (org.snapintosh.adreno) and loginwindow/WindowServer errors
+    diag-poll ...   every 45 s: the top CPU users, AdrenoDisplay's present counters, the plug-in's per-process stats
+  Only platform binaries: no trust-cache change.
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>org.snapintosh.diag</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/sh</string>
+		<string>-c</string>
+		<string>case " $(/usr/sbin/sysctl -n kern.bootargs) " in *" snapintosh_shell=1 "*) ;; *) exit 0;; esac; F=/private/var/tmp/snap-diag.log; echo "diag start $(/bin/date +%s)" &gt;&gt;$F; (while :; do /usr/bin/log stream --style compact --predicate 'subsystem == "org.snapintosh.adreno" OR ((process == "loginwindow" OR process == "WindowServer") AND messageType == fault)' 2&gt;&amp;1 | while IFS= read -r l; do printf 'diag: %s\n' "$l" &gt;&gt;$F; done; sleep 10; done) &amp; while :; do sleep 45; { echo "diag-poll $(/bin/date +%s)"; /bin/ps -axo pid,pcpu,rss,comm | /usr/bin/sort -k2 -nr | /usr/bin/head -8; /usr/sbin/ioreg -l -w0 -r -c AdrenoDisplay | /usr/bin/grep -o '"AdrenoDisplayStats" = {[^}]*}'; for f in /private/var/tmp/adreno-*.log; do echo "== $f"; /usr/bin/tail -2 "$f"; done; } &gt;&gt;$F 2&gt;&amp;1; (/usr/bin/tail -c 1500 $F &gt;&gt;/dev/console 2&gt;/dev/null &amp;); (/usr/bin/tail -c 1500 $F &gt;/dev/cu.debug-console 2&gt;/dev/null &amp;); done</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardInPath</key>
+	<string>/dev/null</string>
+	<key>StandardOutPath</key>
+	<string>/dev/null</string>
+	<key>StandardErrorPath</key>
+	<string>/dev/null</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+</dict>
+</plist>

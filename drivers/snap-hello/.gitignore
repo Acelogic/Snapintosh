@@ -1,0 +1,3 @@
+*.o
+SnapHello.kext/Contents/MacOS/
+SnapHello.kext/Contents/_CodeSignature/

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  A root shell on the guest's console for tools/guest-console.py
+  (docs/GUEST-SHELL-DESIGN-20261016.md). Installed on the guest's Data volume
+  as /Library/LaunchDaemons/org.snapintosh.console-shell.plist (root:wheel 0644).
+  It does nothing unless the boot passes snapintosh_shell=1, and nothing typed
+  reaches it unless the launch also sets SNAP_EARLY_STOP=console. Only platform
+  binaries: no trust-cache change. script(1) gives zsh a pty and puts
+  /dev/console in raw mode, so the console's line discipline neither echoes nor
+  turns ^C into signals.
+  Once loginwindow is up the console's open file is revoked (installed-fresh
+  v11-v14: no shell after the login UI survived), so each restart reopens
+  /dev/console when its stdin is no longer a terminal.
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>org.snapintosh.console-shell</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/sh</string>
+		<string>-c</string>
+		<string>case " $(/usr/sbin/sysctl -n kern.bootargs) " in *" snapintosh_shell=1 "*) ;; *) exit 0;; esac; while :; do [ -t 0 ] || exec &lt;/dev/console &gt;/dev/console 2&gt;&amp;1; /usr/bin/script -q /dev/null /bin/zsh -il; sleep 2; done</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardInPath</key>
+	<string>/dev/console</string>
+	<key>StandardOutPath</key>
+	<string>/dev/console</string>
+	<key>StandardErrorPath</key>
+	<string>/dev/console</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>TERM</key>
+		<string>vt100</string>
+		<key>HOME</key>
+		<string>/var/root</string>
+		<key>PATH</key>
+		<string>/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+</dict>
+</plist>

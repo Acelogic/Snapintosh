@@ -1,0 +1,28 @@
+{
+  "source_commit": "9b7d2a2840902962304dff7df673e44a02eb0fb0",
+  "source_record": "fast-traps-monitor-v1/build.json",
+  "qualification": "Build recipe only; a fresh boot requires fresh candidate admission.",
+  "flags": [
+    "--target=aarch64-unknown-none-elf", "-ffreestanding", "-fno-pic",
+    "-mgeneral-regs-only", "-Os", "-Wall", "-Wextra", "-Werror",
+    "-fno-stack-protector", "-mcmodel=tiny", "-flto",
+    "-DSNAP_SERVICE_PROFILE=1", "-DSNAP_STEP_TRANSLATION_VERIFY=1",
+    "-DSNAP_STEP_ALU=0", "-DSNAP_NATIVE_CALLS=1", "-DSNAP_USER_VIEW_BATCH=1",
+    "-DSNAP_USER_VIEW_CACHE=1", "-DSNAP_USER_VIEW_VERIFY=1",
+    "-DSNAP_USER_ONLY_TLBI=1", "-DSNAP_SERVICE_DETAIL=1",
+    "-DSNAP_KERNEL_DIRTY_PUBLISH=1", "-DSNAP_KERNEL_VIEW_REUSE=1",
+    "-DSNAP_USER_VIEW_FUSED=1", "-DSNAP_KERNEL_CLASS_PROOF=1",
+    "-DSNAP_USER_PREPARE_FUSED=1", "-DSNAP_PRIVATE_VIEW_EPOCH=1",
+    "-DSNAP_ROOT_DIRTY_PUBLISH=1", "-DSNAP_USER_DIRTY_PUBLISH=1",
+    "-DSNAP_USER_TABLE_READ=1", "-DSNAP_VIEW_TABLE_READ=1",
+    "-DSNAP_USER_ZERO_GROUP=1", "-DSNAP_NATIVE_WRITER_ADMISSION=1",
+    "-DSNAP_NATIVE_WRITER_BREAKPOINTS=1", "-DSNAP_VIEW_STORE_COMPARE=1",
+    "-DSNAP_USER_FUSED_COMPARE=1", "-DSNAP_USER_MODE_SKIP=1",
+    "-DSNAP_GUEST_BRK_REFLECT=1", "-DSNAP_USER_TREE_MEMO=1",
+    "-DSNAP_TXN_DIRTY_PUBLISH=1", "-DSNAP_KERNEL_PPERM_REUSE=1",
+    "-DSNAP_USER_UPDATE_KERNEL_SKIP=1", "-DSNAP_INSTALL_TLBI_DEFER=1",
+    "-DSNAP_CLASS_PROOF_MAPPED=1", "-DSNAP_ROOT_VALIDATE_WORDS=1",
+    "-DSNAP_ROOT_PUBLISH_BATCH_DSB=1", "-DSNAP_USER_CRASH_RING=1",
+    "-DSNAP_CLASS_LEAF_MEMO=0"
+  ]
+}

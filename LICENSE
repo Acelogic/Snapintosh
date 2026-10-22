@@ -1,0 +1,42 @@
+MIT License
+
+Copyright (c) 2026 The Snapintosh contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+Snapintosh is MIT with GPL-2.0 components. THIRD_PARTY_NOTICES.md lists every
+third-party component with its upstream notice; the licence texts are in
+LICENSES/.
+
+- compat/adreno-ib-tables.h and its generator tools/gen-adreno-ib-tables.py are
+  GPL-2.0-only (LICENSES/GPL-2.0-only.txt). The CP_PROTECT table in them is
+  translated from Linux drivers/gpu/drm/msm/adreno/a6xx_catalog.c. A binary
+  built with this table (the AdrenoX2 kext, through compat/adreno-ib-command.c,
+  or a monitor build that includes it) is a combined work and is distributable
+  under GPL-2.0.
+- tools/qemu-sptm-oracle/qemu-sptm-oracle-tracer.patch modifies QEMU
+  (jprx/qemu-sptm) and is GPL-2.0-or-later (LICENSES/GPL-2.0-or-later.txt),
+  like the code it changes.
+- Files generated from or ported from other permissively licensed projects
+  (Mesa, m1n1, darwin-vm, the Linux glymur device tree) carry their upstream
+  notices in addition to this licence.
+- This project contains no Apple, Qualcomm, ASUS or Microsoft binaries.
+  Firmware, kernelcaches, KDKs and frameworks are taken from the user's own
+  machines by the provided scripts and are not covered by this licence.

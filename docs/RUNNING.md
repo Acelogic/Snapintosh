@@ -1,0 +1,221 @@
+# Running
+
+This document walks through one boot of the installed macOS on the A16, driven
+from the Mac with `tools/cycle.py`. Placeholders are in angle brackets.
+
+> Read the warning in the [README](../README.md) first. A run programs the GPU,
+> clocks and memory-bandwidth votes, and the guest writes the internal SSD.
+
+## Before the first run
+
+- q1n1 is installed on the A16 as a UEFI boot entry, and macOS 27 is installed
+  on the internal NVMe. See q1n1's `docs/A16-INSTALL.md` and
+  [FULL-INSTALL.md](FULL-INSTALL.md).
+- The Apple inputs are extracted and the components are built
+  ([BUILDING.md](BUILDING.md)).
+- The A16 is connected to the Mac by USB-C, and preferably on AC power. Every
+  hardware mode refuses to start below the battery threshold
+  (`--battery-minimum` can raise it, never lower it).
+- Find the Mac-side network interface that q1n1's USB NCM link created (for
+  example with `ifconfig`). Pass it to every hardware command as
+  `--device udp://<interface>`. The name changes with the USB port.
+- Create `tools/cycle_lib/pins.json` from `tools/cycle_lib/pins.example.json`
+  and fill in the device and stage hashes ([BUILDING.md](BUILDING.md)).
+
+## The cycle
+
+`tools/cycle.py` runs one boot as a fixed sequence. Each mode records what it
+did under `build/<run-prefix>*`, checks the records of the previous step, and
+refuses when the machine is not in the state that step expects. Every mode has
+an offline `--check` that validates everything without touching hardware. At
+any point,
+
+```sh
+python3 tools/cycle.py next
+```
+
+prints the exact next command for the current records.
+
+### 1. Cold boot into q1n1
+
+Power the A16 on into q1n1, or from the Mac:
+
+```sh
+python3 ../q1n1/tools/a16ctl.py boot q1n1
+python3 tools/cycle.py status
+```
+
+`status` makes one read-only proxy query: the generation, the exception level,
+the image base, any SError, and the battery.
+
+### 2. Move to an idle, chainloaded generation
+
+A boot runs on a freshly chainloaded q1n1 generation, never on the cold-booted
+one:
+
+```sh
+python3 tools/cycle.py retire --idle --prefix <label>
+```
+
+This chainloads the other stage slot and confirms that the next generation is
+idle. Use the generation number it reports below.
+
+### 3. Prepare and check
+
+```sh
+python3 tools/cycle.py installed-fresh --prepare --variant fast --prefix <run-prefix> \
+    --device udp://<interface> [run flags...]
+python3 tools/cycle.py installed-fresh --check --variant fast --prefix <run-prefix> \
+    --device udp://<interface> [run flags...]
+```
+
+`--prepare` builds the monitor with the defines the run flags select, and
+assembles the guest image, the AuxKC and the q1n1 GPU steps. Every input is
+pinned by SHA-256: the AuxKC and plug-in builds the flags refer to, and the
+Apple images. A missing or different input is refused. `--check` repeats all
+validation offline and prints the **qualification hash**. Give the same run
+flags to every mode of a run.
+
+`--variant` picks the monitor: `fast` (lock-free fast paths) or `control`
+(the reference monitor).
+
+### 4. Boot
+
+```sh
+python3 tools/cycle.py installed-fresh --boot --variant fast --prefix <run-prefix> \
+    --device udp://<interface> --generation <N> --qualification-sha256 <hash> [run flags...]
+```
+
+The boot runs these steps:
+
+1. a read-only GPU status check;
+2. q1n1's GPU power-up steps (and the DDR and LLCC votes, if requested);
+3. the monitor's adoption of the GPU;
+4. the start of the guest.
+
+It then follows the guest until it stops, and captures the stopped state.
+Only one hardware client may run at a time. Never interrupt a running boot,
+and never start a second client against it.
+
+While the guest runs:
+
+```sh
+# a live console (with --console); --stream only watches, --run sends one command
+python3 tools/guest-console.py --device udp://<interface> \
+    --launch-record build/<run-prefix>-early-stop-launch.json
+# ask the guest to stop early, for example once the desktop is up
+python3 tools/request-stop.py --device udp://<interface> --reason "<text>"
+```
+
+The guest also stops on its own: on a kernel panic, when the thermal guard
+trips (`--thermal-guard`), at the early-stop delay after the first present
+(`--early-stop-delay`), or at the watchdog.
+
+### 5. Preserve, quiesce, retire
+
+```sh
+python3 tools/cycle.py preserve --prefix <run-prefix>              # prints the preservation hash
+python3 tools/cycle.py installed-fresh --quiesce --prefix <run-prefix> --device udp://<interface> [run flags...]
+python3 tools/cycle.py retire --prefix <run-prefix> --preservation-sha256 <hash>
+python3 tools/inspect-logs.py --prefix <run-prefix>                # decode the run's logs
+```
+
+- Preserve the evidence before anything else touches the machine.
+- Quiesce the GPU gracefully after every run that used it. Never initialise
+  a GPU that is still running.
+- `retire` chainloads the next generation, ready for the next run.
+- To start a new run from scratch, cold boot instead.
+
+## Run flags
+
+Every monitor, kext and q1n1 feature is opt-in, with one flag each. To list
+them all, with the requirements between flags:
+
+```sh
+python3 tools/cycle.py installed-fresh --help
+```
+
+The flags fall into these groups:
+
+| Group | Examples |
+| --- | --- |
+| Console and early stop | `--console`, `--single-user`, `--early-stop-delay`, `--let-panic`, `--panic-serve` |
+| Input | `--input`, `--input-touchpad`, `--input-ptp`, `--input-active-us` |
+| Present path | `--present-dartpool`, `--present-resident`, `--present-beam`, `--present-va-reclaim`, `--present-maint`, `--present-latch`, `--present-pipeline` |
+| GPU | `--ib-async`, `--gpu-recover`, `--gpu-va-wide`, `--adreno-fill-br`, `--adreno-fence-br`, `--gpu-x290-survey` |
+| Clocks and bandwidth | `--thermal-guard`, `--gpu-dvfs`, `--gpu-dvfs-ceiling`, `--cpu-dvfs`, `--ddr-vote`, `--llcc`, `--bw-probe` |
+| Storage | `--nvme-async`, `--nvme-converted` |
+| Wi-Fi | `--qcc2072-wifi`, `--qcc2072-auxkc`, `--qcc2072-auxkc-sha256` |
+| Monitor performance | `--fine-locks`, `--root-cache-wide`, `--user-hw-walk`, `--fast-timer-irq`, `--fast-ipi`, `--lean-traps`, `--sptm-fine`, and others |
+| Kernel patches | `--kernel-sysreg-zero`, `--kernel-user-4k`, `--kernel-refmod-skip` ([KERNEL-PATCHES.md](KERNEL-PATCHES.md)) |
+
+The desktop configuration that currently performs best combines all of these
+groups:
+
+```
+--variant fast --wfi-resume --fast-timer-irq --dart-memo --aes-bitslice --fast-ipi
+--fast-el0-sysreg --service-subclass --dart-wiredcnt --panic-serve --root-miss-fast
+--update-disjoint-fast --root-cache-wide --update-check-sparse --input --kernel-pperm-fast
+--ib-budget-1s --unmap-mixed --prime-secondaries --txm-aspace-wide --fine-locks
+--fine-switch --fair-token --user-hw-walk --fine-hw --s2-fault-retry --fast-pauth-calls
+--fast-timer-irq-cpu0 --native-pacga --pauth-el0-live --class-proof-wide --el0-memo
+--unnest-4k-fast --phase-fair-gate --fine-switch-hw --dart-converted --nest-fast
+--detach-fast --root-index --other-profile --gate-wait --lean-traps 1 --input-touchpad
+--input-ptp --present-dartpool --console --kernel-sysreg-zero --kernel-refmod-skip
+--kernel-user-4k --let-panic --early-stop-delay 1500 --hide-amx --audit-sparse
+--reuse-match-mapped --present-resident --el0-wfe --el0-cache-maint --user-crash-wide
+--ib-async --thermal-guard --cpu-dvfs --gpu-dvfs --ddr-vote --bw-probe --spmi-scratch
+--present-beam --llcc --present-va-reclaim --gpu-va-wide --sptm-fine --present-maint
+--nvme-async --nvme-converted --attr-clean-defer --present-latch --adreno-fill-br
+--adreno-fence-br --gpu-x290-survey --gpu-dvfs-ceiling 1185
+--present-pipeline 1 --gpu-recover soft
+```
+
+The present-path flags select specific AdrenoX2 builds. Each needs the flags
+before it in its chain, and `--prepare` reports any missing prerequisite.
+
+## Installing a new Metal plug-in
+
+The plug-in lives on the guest's system. To replace it, boot with `--console
+--single-user`, then install the new bundle from the guest's own console shell
+before the boot continues to multi-user:
+
+```sh
+python3 tools/deploy-guest-plugin.py --device udp://<interface> \
+    --launch-record build/<run-prefix>-early-stop-launch.json --record <record.json> --continue-boot
+```
+
+The tool checks every file against its expected base before writing anything,
+keeps backups, and can put them back with `--restore`.
+
+## Exit codes
+
+A boot reports why the guest stopped:
+
+| Code | Meaning |
+| --- | --- |
+| 1 | stopped for a reason the classifier does not model |
+| 2 | loader failure: the image could not be built or placed |
+| 3 | guest preparation failed; the kernel never ran |
+| 4 | the monitor itself faulted at EL2 |
+| 5 | prepared, but the guest never started |
+| 6 | the kernel took an exception it did not survive |
+| 7 | a monitor operation failed or reached an unsupported contract |
+| 8 | the kernel panicked |
+| 9 | the guest was still running when the watchdog expired |
+| 10 | an SError was recorded |
+| 11 | a virtual device requested a guest reset |
+| 12 | stopped early: on request, at a guest milestone, on the thermal guard, or on a host abort |
+
+A desktop session normally ends with 12. A host-side failure that leaves no
+stop report is not a guest exit code. Wait out the watchdog, then recover the
+real stop state with `cycle.py capture`.
+
+## Other modes
+
+- `cycle.py speed-test` compares the `control` and `fast` monitors on the
+  stock kernel with a RAM-disk BaseSystem, six CPUs and a trap census.
+- `cycle.py bootstrap-smoke` is a five-second, RAM-only, single-CPU
+  integration check.
+- `cycle.py storage` reads persistence from, or snapshots, the SSD at an idle
+  generation.

@@ -1,0 +1,2 @@
+# Unified diff context lines use a single space, including a blank final context line.
+gpu/air2ir3/patches/*.patch whitespace=-blank-at-eol,-blank-at-eof

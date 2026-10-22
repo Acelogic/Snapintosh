@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>org.snapintosh.bootframebuffer</string>
+    <key>CFBundleName</key>
+    <string>SnapintoshBootFramebuffer</string>
+    <key>CFBundlePackageType</key>
+    <string>KEXT</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleVersion</key>
+    <string>0.0.1</string>
+    <key>OSBundleRequired</key>
+    <string>Root</string>
+    <key>OSBundleLibraries</key>
+    <dict>
+        <key>com.apple.iokit.IOGraphicsFamily</key>
+        <string>1.0.0b1</string>
+    </dict>
+    <key>IOKitPersonalities</key>
+    <dict>
+        <key>SnapintoshBootFramebuffer</key>
+        <dict>
+            <key>CFBundleIdentifier</key>
+            <string>com.apple.iokit.IOGraphicsFamily</string>
+            <key>IOClass</key>
+            <string>IOBootFramebuffer</string>
+            <key>IOProviderClass</key>
+            <string>AppleARMIODevice</string>
+            <key>IONameMatch</key>
+			<string>disp0,t8140</string>
+            <key>IOMatchCategory</key>
+            <string>SnapintoshBootFramebuffer</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

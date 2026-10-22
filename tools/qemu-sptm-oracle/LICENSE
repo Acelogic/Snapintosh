@@ -1,0 +1,15 @@
+Licensing of tools/qemu-sptm-oracle/
+
+qemu-sptm-oracle-tracer.patch modifies QEMU as forked in
+https://github.com/jprx/qemu-sptm (revision
+2867d847d3471560e773120ee50c42dbcbb6d60b). Like the code it changes, the patch
+is licensed under the GNU General Public License, version 2 or (at your
+option) any later version (SPDX-License-Identifier: GPL-2.0-or-later; text in
+LICENSES/GPL-2.0-or-later.txt at the repository root). Copyright in the
+patched files remains with the QEMU contributors and jprx.
+
+j700_dt_fixup.py is ported from darwin-vm dt_fixup.py
+(https://github.com/jprx/darwin-vm): Copyright (c) 2026 jprx, MIT.
+
+Every other file in this directory is part of Snapintosh and is MIT licensed
+(LICENSE at the repository root).

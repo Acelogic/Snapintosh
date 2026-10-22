@@ -1,0 +1,71 @@
+{
+  "schema": "snapintosh-cycle-pins-v1",
+  "about": "Example pins: copy to pins.json (git-ignored) and fill in the values for your machine. Project-wide pins that do not change from one generation to the next. Per-candidate values live in candidates/*.json; per-run values come from the run's own records. Paths are relative to the workspace directory that holds Snapintosh and q1n1.",
+  "device": "udp://enN",
+  "base_launcher": {
+    "path": "Snapintosh/tools/run-sks-transport-candidate.py",
+    "sha256": "52fe215a9a4779ebc50f01ecaafb4a4210d2b506b09e6ee10a5fbb089a5cc6b8"
+  },
+  "stages": {
+    "q1n1/build/uefi/q1n1-stage.bin": "752b4ab711fcab5f7a4d4fc1b71dc70ae93ff98efd3212c15d918d2c1e279ea4",
+    "q1n1/build/uefi/q1n1-stage-alt.bin": "e6276e5a032f97ee0f8f087f5f301da25e709f8b8deca2167eb1d4a4ce9c3c03"
+  },
+  "image_bases": [
+    "0xb0000000",
+    "0xb0800000"
+  ],
+  "observers": {
+    "collector": {
+      "path": "Snapintosh/build/collect-panel-mode-20260928.py",
+      "sha256": "a59ff56130523f7734f749a77c2ac43ecb44ff946d7162e149c24c92fb7124a6"
+    },
+    "gui_collector": {
+      "path": "Snapintosh/build/collect-metal-gui-20260927.py",
+      "sha256": "be82e511d15fd923e67533f4552d05dc9631df46b3d9ae1497bb9d317a61bc29"
+    },
+    "ring": {
+      "path": "Snapintosh/build/capture-panel-mode-ring-20260928.py",
+      "sha256": "1484d5a59953c410caedc5fbc852f5b2a9423203d1e3423e45a3d2de2ef02dc5"
+    },
+    "native": {
+      "path": "Snapintosh/build/capture-native-startup-gen55-20260928.py",
+      "sha256": "74069f8fec2f74e66933cb713f540090dc135567e34d757e89ffe61735131d65"
+    },
+    "crash": {
+      "path": "Snapintosh/build/capture-crash-retention-gen55-20260928.py",
+      "sha256": "5265bd8cced6090b616884bbb9e864643cb8f7153cea50633035bb0941bdd294"
+    },
+    "helper": {
+      "runtime_path": "build/run-stopped-cdc-read-20260924.py",
+      "sha256": "fb4f64b8068817b1006dc6c6f2301c0e2d905669d0d12a6d583f7eccbf7e27f4"
+    }
+  },
+  "panel_python": "python3",
+  "txm_qualification": "Snapintosh/build/pauth-native-sign-20260927/launch-qualification-v1.json",
+  "stopped_exits": {
+    "6": "guest exception",
+    "7": "monitor refusal",
+    "9": "watchdog",
+    "12": "early stop"
+  },
+  "default_capture_set": {
+    "6": "early-boot",
+    "7": "standard",
+    "9": "standard",
+    "12": "standard"
+  },
+  "battery": {
+    "default_minimum_without_ac": 50,
+    "floor": 50
+  },
+  "storage": {
+    "persistence": {
+      "path": "Snapintosh/tools/capture-apfs-persistence.py",
+      "sha256": "4d59b3dfb33425c5ec56312d76dc4015507310a9664f3d9f993fe9e81da53c05"
+    },
+    "snapshot": {
+      "path": "Snapintosh/build/snapshot-installed-metal-20260926.py",
+      "sha256": "6eb0d9e06a2e7def32f5b7afb5668eb0912b21501d3b15bd4abe7cbb5fa0844f"
+    }
+  }
+}
