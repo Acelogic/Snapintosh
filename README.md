@@ -1,5 +1,7 @@
 # Snapintosh
 
+![Snapintosh — macOS on Snapdragon; illustrated laptop and processor](docs/assets/snapintosh-hero.png)
+
 Snapintosh boots Apple's macOS 27 (build 26A428) on an ASUS Zenbook A16 laptop
 with a Qualcomm Snapdragon X2 Elite (X2E-96-100). It is an EL2 monitor
 (hypervisor) and the toolchain around it. The monitor runs Apple's stock
