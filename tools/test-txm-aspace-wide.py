@@ -53,7 +53,7 @@ from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = read_source(ROOT / 'probes/xnuboot.c')
-TXM_C = (ROOT / 'compat/txm.c').read_text()
+TXM_C = read_source(ROOT / 'compat/txm.c')
 TXM_H = (ROOT / 'compat/txm.h').read_text()
 WIDE = '-DSNAP_TXM_ASPACE_WIDE=1'
 CORE = ['compat/txm.c', 'compat/txm-copy.c', 'compat/sptm.c', 'compat/sptm-root.c', 'compat/sptm-user.c',
