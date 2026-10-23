@@ -12,6 +12,8 @@ import sys
 import time
 from source_text import read_source
 
+from source_text import source_files
+
 ROOT = Path(__file__).resolve().parents[1]
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
 
@@ -146,7 +148,8 @@ def main():
     bind(Path(abi['kernelcache']))
     for name in ['tools/check-iomfb-vtable.py', 'tools/test-display-profile.py',
             'gpu/adreno-kext/kext/src/AdrenoDisplay.cpp', 'gpu/adreno-kext/kext/src/AdrenoDisplay.h']:
-        bind(ROOT/name)
+        for path in source_files(ROOT/name):              # a split unit binds its ordered parts too
+            bind(path)
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     command = [sys.executable, 'tools/test-display-profile.py', '--firmware', str(original/'downloads/extracted/j700ap')]

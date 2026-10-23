@@ -13,6 +13,8 @@ import hashlib
 import json
 import subprocess
 
+from source_text import source_files
+
 ROOT = Path(__file__).resolve().parents[1]
 NETWORK = ROOT.parent / 'Snapintosh-adreno-buffer-textures'
 PIPELINE = ROOT.parent / 'Snapintosh-adreno-pipeline'
@@ -67,8 +69,9 @@ def main():
     kext = Path(network['kext_bundle'])
     bind(kext / 'Contents/MacOS/AdrenoX2', network['kext_sha256'])
     assert b'AdrenoIBCopyABI' in (kext / 'Contents/MacOS/AdrenoX2').read_bytes()
-    assert bind(ROOT / 'gpu/adreno-kext/kext/src/AdrenoDisplay.cpp') == bind(
-        ROOT.parent / 'Snapintosh-adreno-fill/gpu/adreno-kext/kext/src/AdrenoDisplay.cpp')
+    display_unit = source_files(ROOT / 'gpu/adreno-kext/kext/src/AdrenoDisplay.cpp')   # with its ordered parts
+    accepted_unit = source_files(ROOT.parent / 'Snapintosh-adreno-fill/gpu/adreno-kext/kext/src/AdrenoDisplay.cpp')
+    assert [bind(p) for p in display_unit] == [bind(p) for p in accepted_unit]
 
     native_path = ROOT / 'build/qc-pipelines-composite-20260928-v1.json'
     native = read(native_path,

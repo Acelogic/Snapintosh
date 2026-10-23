@@ -31,6 +31,8 @@ import sys
 import tempfile
 import unittest
 
+from source_text import read_source
+
 ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / 'compat/adreno-resource.c'
 HARNESS = ROOT / 'tools/test-adreno-residency.c'
@@ -527,7 +529,7 @@ class VAKext(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.source = MAP.read_text()
-        cls.display = (KEXT / 'src/AdrenoDisplay.cpp').read_text()
+        cls.display = read_source(KEXT / 'src/AdrenoDisplay.cpp')     # with its ordered parts
 
     def test_filler_is_read_only_and_never_released(self):
         insert = between(self.source, 'static int fillerInsert(')

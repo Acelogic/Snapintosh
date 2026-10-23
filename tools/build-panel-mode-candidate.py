@@ -8,6 +8,8 @@ from pathlib import Path
 import shutil
 import subprocess
 
+from source_text import source_files
+
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE = ROOT / 'build/virtual-ethernet-clock-20260927/native-link-v3'
 SOURCE = ROOT.parent / 'Snapintosh-adreno-clear'
@@ -32,7 +34,8 @@ def main():
     for name, expected in objects.items():
         assert sha(BASELINE / name) == expected, name
     source = SOURCE / 'gpu/adreno-kext/kext/src/AdrenoDisplay.cpp'
-    inputs = {str(source): sha(source), str(BASELINE / 'qualification.json'): sha(BASELINE / 'qualification.json')}
+    inputs = {str(f): sha(f) for f in source_files(source)}      # the unit: AdrenoDisplay.cpp and its parts
+    inputs[str(BASELINE / 'qualification.json')] = sha(BASELINE / 'qualification.json')
     for folder in ['gpu/adreno-kext/kext/src', 'gpu/adreno-kext/kext/include', 'gpu/adreno-kext/include']:
         for f in (SOURCE / folder).glob('*.h'):
             inputs[str(f)] = sha(f)

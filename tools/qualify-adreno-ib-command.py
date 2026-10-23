@@ -40,6 +40,8 @@ import subprocess
 import sys
 from source_text import source_files
 
+from source_text import source_files
+
 ROOT = Path(__file__).resolve().parents[1]
 Q1N1 = ROOT.parent / 'q1n1' / 'tools'
 PLANS = ROOT / 'build' / 'adreno-pipeline-compiler-20260927'
@@ -665,7 +667,8 @@ def main():
     if monitor:
         inputs.append('compat/adreno-ib.h')
     for kext_source in ('AdrenoX2.cpp', 'AdrenoX2.h', 'AdrenoSegmentList.cpp', 'AdrenoMemoryMap.cpp'):
-        inputs.append(f'gpu/adreno-kext/kext/src/{kext_source}')
+        for path in source_files(ROOT / f'gpu/adreno-kext/kext/src/{kext_source}'):   # with its ordered parts
+            inputs.append(str(path.relative_to(ROOT)))
     inputs.append('gpu/adreno-kext/kext/build.sh')
     inputs += [str(q.relative_to(ROOT)) for p in inputs if p.endswith('.c') for q in source_files(ROOT / p)[1:]]
     external = {str(p): sha(p) for p in [PLANS / 'draw-plan-v2/draw.ib.bin', PLANS / 'draw-plan-v2/references.json',

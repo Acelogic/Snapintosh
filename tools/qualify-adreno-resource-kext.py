@@ -13,6 +13,8 @@ import re
 import struct
 import subprocess
 
+from source_text import source_files
+
 ROOT = Path(__file__).resolve().parents[1]
 KDK = Path('/Library/Developer/KDKs/KDK_27.0_26A428.kdk/System/Library')
 sha = lambda data: hashlib.sha256(data).hexdigest()
@@ -152,8 +154,10 @@ def main():
     funcs = {f['symbol']: f for im in native['images'] for f in im['functions']}
     update = funcs['__ZN14IOGPUMemoryMap10update_pteEjP18IOMemoryDescriptorS1_']['instructions']
     assert any(i['mnemonic'] == 'tbnz' and i['operands'].startswith('w0, #0,') for i in update)
+    # AdrenoX2.cpp and its ordered parts
+    x2_unit = [str(p.relative_to(ROOT)) for p in source_files(ROOT/'gpu/adreno-kext/kext/src/AdrenoX2.cpp')]
     sources = ['compat/adreno-resource.c','compat/adreno-resource.h','compat/adreno-guest.h',
-        'gpu/adreno-kext/kext/src/AdrenoMemoryMap.cpp','gpu/adreno-kext/kext/src/AdrenoX2.cpp',
+        'gpu/adreno-kext/kext/src/AdrenoMemoryMap.cpp',*x2_unit,
         'gpu/adreno-kext/kext/src/AdrenoX2.h','gpu/adreno-kext/kext/include/IOGPUFamily26A428.h',
         'gpu/adreno-kext/kext/Info.plist','gpu/adreno-kext/kext/build.sh',
         'tools/trace-adreno-resource-kext.py','tools/trace-adreno-memory-map.py',

@@ -12,6 +12,8 @@ import hashlib
 import json
 import subprocess
 
+from source_text import source_files
+
 ROOT = Path(__file__).resolve().parents[1]
 ORIGINAL = ROOT.parent / 'Snapintosh'
 sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -102,7 +104,7 @@ kext = ROOT / 'build/ca-integrated-kext-20260928-v1/AdrenoX2.kext'
 bind(kext / 'Contents/MacOS/AdrenoX2', '54d32bb79af174703a17a21286231b6af6d555ca67d57d7662815a9c4717a9d1')
 display = ROOT / 'gpu/adreno-kext/kext/src/AdrenoDisplay.cpp'
 accepted = ROOT.parent / 'Snapintosh-adreno-fill/gpu/adreno-kext/kext/src/AdrenoDisplay.cpp'
-assert bind(display) == bind(accepted)
+assert [bind(p) for p in source_files(display)] == [bind(p) for p in source_files(accepted)]   # with its parts
 assert b'AdrenoIBCopyABI' in (kext / 'Contents/MacOS/AdrenoX2').read_bytes()
 for tree in (bundle, ROOT / 'gpu/adreno-kext/kext', ROOT / 'gpu/adreno-kext/plugin'):
     for path in tree.rglob('*'):
