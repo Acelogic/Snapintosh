@@ -11,7 +11,7 @@ A workspace holds two repositories side by side:
 | Directory | Role |
 | --- | --- |
 | `Snapintosh/` | The Apple guest compatibility runtime: monitor, loader, device models, GPU stack, drivers, tools and docs |
-| `q1n1/` | The UEFI EL2 proxy (a fork of Asahi Linux's m1n1, [github.com/Acelogic/q1n1](https://github.com/Acelogic/q1n1)) that owns the A16 hardware and the USB transport |
+| `q1n1/` | The UEFI EL2 proxy (a fork of Asahi Linux's m1n1, [github.com/Snapintosh/q1n1](https://github.com/Snapintosh/q1n1)) that owns the A16 hardware and the USB transport |
 
 Several tools import q1n1's Python modules from the sibling checkout, so keep
 the two directories next to each other.

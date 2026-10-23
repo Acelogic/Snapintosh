@@ -9,7 +9,7 @@ none of these is a drop-in model.
 | Project | URL | Used for |
 | --- | --- | --- |
 | m1n1 (Asahi Linux) | https://github.com/AsahiLinux/m1n1 | base of q1n1; RTKit, ASC mailbox and DART references; AGX prototype constants |
-| q1n1 | https://github.com/Acelogic/q1n1 | the EL2 proxy that loads and runs the monitor |
+| q1n1 | https://github.com/Snapintosh/q1n1 | the EL2 proxy that loads and runs the monitor |
 | XNU source (Apple open source) | https://github.com/apple-oss-distributions/xnu | reading kernel behaviour: `PAGE_RATIO`, `TRAP_DEBUGGER`, CPU topology parsing |
 | Linux kernel | https://github.com/torvalds/linux | Apple watchdog register description; Adreno and Qualcomm platform references (read only) |
 | Mesa (freedreno, ir3, Turnip) | https://gitlab.freedesktop.org/mesa/mesa | Adreno ISA and compiler backend for air2ir3; command-stream reference |

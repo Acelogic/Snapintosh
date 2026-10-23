@@ -21,7 +21,7 @@ the Wi-Fi path get their own sections because they cross every layer.
 
 ## 1. q1n1: the host side
 
-[q1n1](https://github.com/Acelogic/q1n1) is a UEFI application derived from
+[q1n1](https://github.com/Snapintosh/q1n1) is a UEFI application derived from
 Asahi Linux's m1n1. It starts from the A16's firmware, calls
 `ExitBootServices` and keeps the CPU at EL2. Then it brings up a USB device
 port as an NCM network interface to the Mac and serves m1n1's proxy protocol

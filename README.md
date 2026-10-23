@@ -25,7 +25,7 @@ The project also includes an I2C-HID keyboard and touchpad driver (SnapI2CHID),
 native QCC2072 Wi-Fi work, and NVMe storage through an emulated Apple storage
 controller.
 
-Snapintosh is used together with [q1n1](https://github.com/Acelogic/q1n1), a
+Snapintosh is used together with [q1n1](https://github.com/Snapintosh/q1n1), a
 UEFI EL2 proxy forked from Asahi Linux's m1n1. q1n1 takes the machine at EL2
 after UEFI and serves m1n1's proxy protocol over USB-C to a Mac host, which
 drives Snapintosh from there.
