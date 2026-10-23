@@ -13,6 +13,8 @@ import struct
 import subprocess
 import time
 
+from source_text import source_files
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -153,7 +155,8 @@ def main():
             identity += '+arm64e-' + llvm_options_hash
             record['compiler_id'] = identity
             record['llvm_options'] = llvm_options
-            for name in cid.SRC: inputs[str(compiler / name)] = sha(compiler / name)
+            for name in cid.SRC:
+                for path in source_files(compiler / name): inputs[str(path)] = sha(path)
             cpp_object, sampler_object = out / 'air2ir3.o', out / 'a8xx_sampler.o'
             run(['xcrun', 'clang++', '-arch', compiler_arch, '-mmacosx-version-min=27.0',
                 *cxx, *flags, *include, *defines, '-DAIR2IR3_COMPILER_ID="' + identity + '"',
