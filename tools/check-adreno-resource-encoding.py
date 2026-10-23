@@ -61,7 +61,7 @@ def main():
              ROOT/'compat/adreno-resource-list.c',ROOT/'compat/adreno-resource-list.h',
              ROOT/'compat/adreno-submit.h',PLUGIN/'build.sh',
              PLUGIN/'harness/resource-encoding.m',PLUGIN/'harness/regtest.m',PLUGIN/'harness/ws_selectors.h']
-    sources+=list((PLUGIN/'AdrenoMetal').glob('*'))
+    sources+=list((PLUGIN/'AdrenoMetal').rglob('*'))   # split sources keep their parts in subdirectories
     sources+=list((PLUGIN.parent/'include').glob('*.h'))
     source_hashes={str(p.relative_to(ROOT)):sha(p) for p in sorted(sources) if p.is_file()}
     commands=[]

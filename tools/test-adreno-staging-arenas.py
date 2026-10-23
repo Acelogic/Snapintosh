@@ -18,7 +18,7 @@ harness gauge puts a dealloc sentinel on every staging arena the plug-in allocat
   faults     run B: an injected IOGPU allocation failure drains a non-empty pool and is retried once (buffer and
              texture); with an empty pool it is not retried (A8, A16)
   gauge      the plug-in's live counts equal the harness's; its peak equals the harness's (A13)
-  source     no release between gAdrenoStagingLock's lock and unlock in AdrenoDrawCommands.m (A4)
+  source     no release between gAdrenoStagingLock's lock and unlock in AdrenoDrawCommands.m and its parts (A4)
   stats      the plug-in's diagnostics stats line carries the arenas(...) fields and stays under 1 KB (A19)
 --expect-before: the unchanged plug-in must fail at least one check.
 
@@ -33,6 +33,9 @@ import re
 import struct
 import subprocess
 import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 HARNESS = ROOT / 'gpu/adreno-kext/plugin/harness'
@@ -256,13 +259,13 @@ def main():
     check(line is not None and ' arenas(live/live_kib/peak/peak_kib/pooled_kib/aged/capped/drains/failures/retries_ok/continued)='
           in line and len(line) <= 1024, f'stats: the diagnostics stats line lacks the arenas fields: {line and line[-200:]}')
     # ---- source check (A4)
-    src = DRAW.read_text()
+    src = read_source(DRAW)
     bad = []
     for m in re.finditer(r'os_unfair_lock_lock\(&gAdrenoStagingLock\);(.*?)os_unfair_lock_unlock\(&gAdrenoStagingLock\);', src, re.S):
         if re.search(r'CFBridgingRelease|__bridge_transfer|CFRelease|AdrenoStagingReleaseVictims', m.group(1)):
             bad.append(src[:m.start()].count('\n') + 1)
     check(bool(re.search(r'os_unfair_lock_lock\(&gAdrenoStagingLock\)', src)) and not bad,
-          f'source: a release inside gAdrenoStagingLock at lines {bad}')
+          f'source: a release inside gAdrenoStagingLock at lines {bad} of the expanded unit')
     result = dict(checks=checks, failures=failures, summary=summary, bundle=bundle, expect_before=args.expect_before)
     (out / 'result.json').write_text(json.dumps(result, indent=2, default=str) + '\n')
     if args.expect_before:

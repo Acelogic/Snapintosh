@@ -13,6 +13,10 @@ import argparse
 import hashlib
 import json
 import subprocess
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from source_text import read_source, source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 PIPE = ROOT.parent / 'Snapintosh-adreno-pipeline'
@@ -74,8 +78,10 @@ proof_path = bind(PIPE / 'build/ca-vpc-a16-verified-gen58-20260928-v1/verificati
     '8d95a910aedce77fb31710799e0882e0a1c8b0d32b1eacfbf709e0c5d0995c2e')
 proof = json.loads(proof_path.read_text())
 assert proof['status'] == 'A16_CA_FRAME_EXACT' and not proof['desktop_verified']
-source = bind(PIPE / 'gpu/adreno-kext/plugin/AdrenoMetal/AdrenoDrawCommands.m')
-assert '![var[@"interp"] isEqual:@"no_perspective"]' in source.read_text()
+source = PIPE / 'gpu/adreno-kext/plugin/AdrenoMetal/AdrenoDrawCommands.m'
+for part in source_files(source):
+    bind(part)
+assert '![var[@"interp"] isEqual:@"no_perspective"]' in read_source(source)
 bind(__file__)
 output = args.output.resolve()
 assert not output.exists()
