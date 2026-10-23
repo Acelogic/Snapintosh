@@ -31,6 +31,7 @@ import struct
 import sys
 import tempfile
 from monitor_layout import MonitorLayout
+from source_text import read_source
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location('xnuboot', ROOT / 'probes' / 'xnuboot.py')
@@ -1160,7 +1161,7 @@ try:
        f'{s2_words[30]:#x}..{s2_words[31]:#x}')
     ok('fb_pa/fb_span in the params are zero with the panel withheld',
        (s2_words[32], s2_words[33]) == (0, 0))
-    s2_c = (ROOT / 'probes' / 'xnuboot.c').read_text()
+    s2_c = read_source(ROOT / 'probes' / 'xnuboot.c')
     s2_m = re.search(r'#define PARAMS_WORDS (\d+)', s2_c)
     ok('PARAMS_WORDS agrees with probes/xnuboot.c',
        s2_m is not None and int(s2_m.group(1)) == xb.PARAMS_WORDS,

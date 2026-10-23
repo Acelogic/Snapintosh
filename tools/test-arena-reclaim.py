@@ -16,6 +16,7 @@ import re
 import runpy
 import subprocess
 import tempfile
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -206,7 +207,7 @@ int main(void)
 
 
 def main():
-    source = (ROOT/'probes/xnuboot.c').read_text()
+    source = read_source(ROOT/'probes/xnuboot.c')
     extract = runpy.run_path(str(ROOT/'tools/test-guard-step.py'))['function']
     stats = re.search(r'    struct arena_reclaim_stats \{.*?\} arena_reclaim;', source, re.S).group(0)
     signatures = [

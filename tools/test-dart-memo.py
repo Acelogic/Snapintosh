@@ -38,9 +38,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 HEADER = (ROOT / 'compat/sptm-dart-memo.h').read_text()
 DART_C = (ROOT / 'compat/sptm-dart.c').read_text()
 SPTM_H = (ROOT / 'compat/sptm.h').read_text()

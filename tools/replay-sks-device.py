@@ -8,6 +8,7 @@ import hashlib
 import importlib.util
 import json
 import subprocess
+from source_text import source_files
 
 ROOT=Path(__file__).resolve().parents[1]
 sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -66,6 +67,7 @@ def main():
     pins=sources+[ROOT/'compat/device.h',ROOT/'compat/sep-sks-endpoint.h',ROOT/'compat/sep-sks.h',
         Path(__file__),ROOT/'docs/SKS-MONITOR-INTEGRATION-20260928.md',ROOT/'probes/xnuboot.c',
         ROOT/'compat/sptm-dart.c',ROOT/'compat/sptm-dart.h',ROOT/'probes/run.py',ROOT/'probes/devicemodel.py']
+    pins+=[q for p in pins if p.suffix=='.c' for q in source_files(p)[1:]]
     record=dict(status='RUNNING',hardware_access=False,inputs_sha256={str(p):sha(p) for p in pins})
     try:
         command=['clang','-std=c11','-O2','-Wall','-Wextra','-Werror','-dynamiclib',

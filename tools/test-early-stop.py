@@ -20,6 +20,7 @@ import tempfile
 import threading
 import unittest
 import zlib
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'probes'), str(ROOT / 'tools')]
@@ -103,7 +104,7 @@ class Guest(unittest.TestCase):
 
 class Layout(unittest.TestCase):
     header = (ROOT / 'compat/early-stop.h').read_text()
-    monitor = (ROOT / 'probes/xnuboot.c').read_text()
+    monitor = read_source(ROOT / 'probes/xnuboot.c')
 
     def members(self, name):
         body = re.search(r'struct %s \{(.*?)\n\};' % name, self.header, re.S)[1]

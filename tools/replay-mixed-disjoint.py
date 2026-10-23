@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import runpy
+from source_text import source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
@@ -71,6 +72,7 @@ def main():
     headers = sorted(str(p.relative_to(ROOT)) for d in ['compat','shadow']
                      for p in (ROOT/d).glob('*.h'))
     sources += impl + headers + ['probes/xnuboot.c']
+    sources += [str(q.relative_to(ROOT)) for p in sources if p.endswith('.c') for q in source_files(ROOT/p)[1:]]
     record = {'status':'FAIL', 'hardware_access':False,
               'capture':str(capture),'capture_sha256':sha(capture),
               'request':req, 'source_sha256':{p:sha(ROOT/p) for p in sources},
@@ -107,6 +109,7 @@ def main():
         import run as monitor
         monitor.FLAGS=spec['build_defines']
         inputs=monitor.MULTI['xnuboot']+['probes/probe.ld','probes/run.py']
+        inputs+=[str(q.relative_to(ROOT)) for p in inputs if p.endswith('.c') for q in source_files(ROOT/p)[1:]]
         for name in inputs:record['source_sha256'][name]=sha(ROOT/name)
         blob=monitor.build('xnuboot',out/'monitor')
         record['monitor']={'sha256':hashlib.sha256(blob).hexdigest(),'bytes':len(blob),

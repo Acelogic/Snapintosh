@@ -44,6 +44,7 @@ import sys
 import tempfile
 import types
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'probes'))
@@ -163,7 +164,7 @@ class Monitor(unittest.TestCase):
         self.assertEqual(bit('S2_XN'), q.S2_XN)
 
     def test_monitor_source(self):
-        src = SOURCE.read_text()
+        src = read_source(SOURCE)
         self.assertIn('#ifndef SNAP_QCC2072_WIFI\n#define SNAP_QCC2072_WIFI 0\n#endif\n'
                       '#if SNAP_QCC2072_WIFI\n#include "../compat/qcc2072-wifi.h"\n#endif\n', src)
         self.assertEqual(src.count('qcc2072-wifi.h"'), 1)

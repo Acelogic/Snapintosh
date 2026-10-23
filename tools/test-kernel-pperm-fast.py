@@ -47,9 +47,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 FAST_H = (ROOT / 'shadow/sprr-class-fast.h').read_text()
 LEAF_H = (ROOT / 'shadow/sprr-class-leaf-memo.h').read_text()
 TEST_C = 'tools/test-kernel-pperm-fast.c'

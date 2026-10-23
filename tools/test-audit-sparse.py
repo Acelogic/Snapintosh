@@ -29,9 +29,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 FAST = (ROOT / 'shadow/sprr-class-fast.h').read_text()
 HEADER = (ROOT / 'compat/audit-sparse.h').read_text()
 OBJDUMP = '/opt/homebrew/opt/llvm/bin/llvm-objdump'

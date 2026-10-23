@@ -16,9 +16,10 @@ import re
 import subprocess
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 HEADER = (ROOT / 'compat/fast-trap.h').read_text()
 ORACLE = (ROOT / 'tools/test-fast-trap.c').read_text()
 

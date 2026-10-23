@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import sys
+from source_text import source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 # build/active-root-policy-20260926/monitor-v2/build.json build_defines, the set
@@ -86,6 +87,7 @@ OWNED = ['compat/fast-trap.h', 'compat/perf-state.h', 'compat/service-lock.h',
          'shadow/sprr-variants.h', 'tools/test-kernel-pperm-variants.c',
          'tools/test-speed-test-console.py', 'tools/cycle_lib/speed_test.py', 'tools/monitor_layout.py',
          'compat/device.c', 'compat/device.h', 'tools/test-pmgr-ioreport.c', 'tools/pmgr-ioreport-accesses.h']
+OWNED += [str(p.relative_to(ROOT)) for o in OWNED if o.endswith('.c') for p in source_files(ROOT / o)[1:]]
 SAN = ['-fsanitize=address,undefined', '-fno-sanitize-recover=all']
 BASE = ['cc', '-std=gnu11', '-g', '-Wall', '-Wextra', '-Icompat', '-Ishadow']
 SPTM = ['compat/sptm-root.c', 'compat/sptm-user.c', 'compat/sptm.c', 'compat/sptm-refs.c',

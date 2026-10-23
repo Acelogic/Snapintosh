@@ -34,6 +34,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 OPS = Path(os.environ.get('SNAPINTOSH_OPS', '/nonexistent/set-SNAPINTOSH_OPS'))  # operator/agent tree (baselines, receipts)
@@ -59,7 +60,7 @@ ON = ['-DSNAP_ANS_ASYNC=1', '-DSNAP_ANS_CONVERTED=1', '-DSNAP_ATTR_CLEAN_DEFER=1
 WORK = Path(tempfile.mkdtemp(prefix='nvme-async-'))
 OPS_PER_CPU = '300' if ARGS.quick else '600'
 CHANGED_C = ['probes/xnuboot.c', 'compat/ans.c', 'compat/ans-window.c', 'compat/nvme-host.c']
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 CC = ['clang', '-std=gnu11', '-O1', '-g', '-Wall', '-Wextra', '-Werror', '-Icompat', '-Ishadow']
 IGNORE = WORK / 'tsan-ignore.txt'
 IGNORE.write_text('fun:metadata\nfun:data_type\n')    # tools/test-sptm-fine.py's: sptm-user.c's pre-lock reads

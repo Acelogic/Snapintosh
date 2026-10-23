@@ -18,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 checks = 0
@@ -31,7 +32,7 @@ def expect(ok, what):
 
 
 def gate():
-    text = (ROOT / 'probes/xnuboot.c').read_text()
+    text = read_source(ROOT / 'probes/xnuboot.c')
     expect(text.count('#ifndef SNAP_PANIC_SERVE\n#define SNAP_PANIC_SERVE 0\n#endif') == 1, 'define block')
     m = re.search(r'    if\(!sptm_panic_dispatch\(&c->panic_state,\(unsigned\)vcpu_of\(c\)->slot,x16\)\n'
                   r'(#if SNAP_PANIC_SERVE\n.*?\n#endif\n)       \) \{\n'

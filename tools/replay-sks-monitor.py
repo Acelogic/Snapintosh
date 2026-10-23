@@ -9,6 +9,7 @@ import importlib.util
 import json
 import struct
 import subprocess
+from source_text import read_source, source_files
 
 ROOT=Path(__file__).resolve().parents[1]
 sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -71,9 +72,10 @@ def main():
     pins=sources+[ROOT/'tools/sks-device-e2e-bridge.c',ROOT/'tools/test-sptm-dart-sep.c',
         ROOT/'tools/replay-sks-device.py',Path(__file__),ROOT/'probes/xnuboot.c',
         ROOT/'docs/SKS-DMA-E2E-20260928.md']+list((ROOT/'compat').glob('*.h'))
+    pins+=[q for p in pins if p.suffix=='.c' for q in source_files(p)[1:]]
     record=dict(status='RUNNING',hardware_access=False,inputs_sha256={str(p):sha(p) for p in pins})
     try:
-        source=(ROOT/'probes/xnuboot.c').read_text()
+        source=read_source(ROOT/'probes/xnuboot.c')
         begin=source.index('struct sep_rom_dma_context {');end=source.index('\n};',begin)+3
         callback_begin=source.index('static int sep_service_admit(')
         callback_end=source.index('static int sep_entropy32(',callback_begin)

@@ -48,9 +48,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 ROOT_C = (ROOT / 'compat/sptm-root.c').read_text()
 HEADER = (ROOT / 'compat/root-miss.h').read_text()
 DEFINE = '-DSNAP_ROOT_MISS_FAST=1'

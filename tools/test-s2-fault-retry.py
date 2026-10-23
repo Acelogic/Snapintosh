@@ -56,11 +56,12 @@ import sys
 import tempfile
 import types
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFINE = '-DSNAP_S2_FAULT_RETRY=1'
 HEADER = (ROOT / 'compat/s2-fault-retry.h').read_text()
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 RUNS = {  # the three stops: work dump, recorded IPA (the re-walk's), ESR, FAR, the dump's level-3 table
     'v62': (0x92fdde030, 0x92000046, 0x75a18a6030, 0xae37e3000),
     'v63': (0x936f0f200, 0x92000046, 0x78d4c9f200, 0xae37f1000),

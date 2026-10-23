@@ -23,6 +23,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 OPS = Path(os.environ.get('SNAPINTOSH_OPS', '/nonexistent/set-SNAPINTOSH_OPS'))  # operator/agent tree (baselines, receipts)
@@ -226,7 +227,7 @@ def preprocess(root, path, defines):
     return r.returncode, ' '.join(r.stdout.split()), r.stderr
 
 
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 HARNESS = (ROOT / 'tools/test-multipage-fast.c').read_text()
 VIEW_C = (ROOT / 'shadow/sprr-view.c').read_text()
 

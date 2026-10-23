@@ -7,6 +7,7 @@ import runpy
 import struct
 import subprocess
 import tempfile
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 extract = runpy.run_path(str(ROOT / 'tools/test-guard-step.py'))['function']
@@ -136,7 +137,7 @@ int main(void)
 
 
 def main():
-    source = (ROOT / 'probes/xnuboot.c').read_text()
+    source = read_source(ROOT / 'probes/xnuboot.c')
     wrappers = '\n'.join(extract(source, signature) for signature in (
         'int xnuboot_async(uint64_t elr, uint64_t which, const uint64_t *frame)\n{',
         'int xnuboot_trap(uint64_t *frame, uint64_t esr, uint64_t *elr)\n{'))

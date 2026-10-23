@@ -16,9 +16,10 @@ fails here instead of on hardware:
 from pathlib import Path
 import re
 import runpy
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-source = (ROOT / 'probes/xnuboot.c').read_text()
+source = read_source(ROOT / 'probes/xnuboot.c')
 function = runpy.run_path(str(ROOT / 'tools/test-guard-step.py'))['function']
 checks = 0
 

@@ -27,9 +27,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 VECTOR = (ROOT / 'compat/fast-vector.h').read_text()
 MEMO = (ROOT / 'compat/el0-memo.h').read_text()
 DOMAIN = (ROOT / 'compat/pauth-domain.c').read_text()

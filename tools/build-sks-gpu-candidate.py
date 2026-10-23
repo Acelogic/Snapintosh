@@ -9,6 +9,7 @@ import re
 import runpy
 import subprocess
 import sys
+from source_text import read_source
 
 ORIGINAL=Path(__file__).resolve().parents[1]
 sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -31,7 +32,7 @@ def main():
         for path,digest in json.loads(proof.read_text())['inputs_sha256'].items():assert sha(path)==digest,path
     # The DMA qualification executed the same callback source used by this build.
     def callbacks(path):
-        source=path.read_text();a=source.index('static int sep_service_admit(')
+        source=read_source(path);a=source.index('static int sep_service_admit(')
         return source[a:source.index('static int sep_entropy32(',a)]
     assert callbacks(root/'probes/xnuboot.c')==callbacks(ORIGINAL/'probes/xnuboot.c')
     permitted={'compat/device.c','compat/device.h','compat/sptm-dart.c','compat/sptm-dart.h',

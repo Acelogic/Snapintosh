@@ -11,6 +11,7 @@ import json
 import struct
 import subprocess
 import types
+from source_text import read_source, source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -110,13 +111,14 @@ def main():
         'sks-device-e2e-bridge.c','test-sptm-dart-sep.c','kc-xref.py','audit_sep_sks.py']
     pins = sources + [ROOT/'tools'/p for p in helpers] + [Path(__file__), ROOT/'probes/xnuboot.c',
         ROOT/'docs/SKS-GEN53-FAILURE-20260928.md'] + list((ROOT/'compat').glob('*.h'))
+    pins += [q for p in pins if p.suffix == '.c' for q in source_files(p)[1:]]
     record = dict(status='RUNNING', hardware_access=False, inputs_sha256={str(p):sha(p) for p in pins})
     try:
         sender = Sender()
         record['native_binding'] = sender.binding
         assert sender.pack(0x2a, 2, 1128) == 0x0468000000022a03
         record['generation53_failed_request_reproduced'] = True
-        source = (ROOT/'probes/xnuboot.c').read_text()
+        source = read_source(ROOT/'probes/xnuboot.c')
         begin = source.index('struct sep_rom_dma_context {')
         end = source.index('\n};', begin)+3
         cb = source.index('static int sep_service_admit(')

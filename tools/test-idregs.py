@@ -49,10 +49,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 HEADER = (ROOT / 'probes/idregs.h').read_text()
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 _LLVM_BIN = os.environ.get('LLVM_BIN')
 if _LLVM_BIN:
     LLVM = Path(_LLVM_BIN)

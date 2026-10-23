@@ -50,6 +50,7 @@ import re
 import struct
 import sys
 from pathlib import Path
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
@@ -103,7 +104,7 @@ def movz_zero(word):
 
 def tuples(path, macro):
     """Every macro(a,b,c,d,e) register tuple in a source file."""
-    text = (ROOT / path).read_text()
+    text = read_source(ROOT / path)
     return {tuple(int(v) for v in m.groups())
             for m in re.finditer(macro + r'\(\s*(\d+)u?\s*,\s*(\d+)u?\s*,\s*(\d+)u?\s*,\s*(\d+)u?\s*,\s*(\d+)u?\s*\)', text)}
 
@@ -208,7 +209,7 @@ def main():
         m = re.search(re.escape(label) + r'(.*?)break;', text, flags=re.S)
         need(m is not None, f'no {label!r}')
         return re.sub(r'\s+', '', m.group(1))
-    monitor = (ROOT / 'probes/xnuboot.c').read_text()
+    monitor = read_source(ROOT / 'probes/xnuboot.c')
     locked = monitor[monitor.index('static int xnuboot_trap_locked'):]
     locked = locked[locked.index('if (ec != 0x18) {'):locked.index('\n#if SNAP_FAST_VCPU_TRAPS')]
     need(not re.search(r'^\s*#\s*(if|ifdef|ifndef|else|elif)', locked, flags=re.M),

@@ -40,6 +40,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 LLVM = Path('/opt/homebrew/opt/llvm/bin')
@@ -185,7 +186,7 @@ def between(text, start, end):
 
 def hooks():
     asm = (ROOT / 'probes/xnuboot.S').read_text()
-    src = (ROOT / 'probes/xnuboot.c').read_text()
+    src = read_source(ROOT / 'probes/xnuboot.c')
     switch = (ROOT / 'compat/pauth-switch.S').read_text()
     header = (ROOT / 'compat/pauth-switch.h').read_text()
     checks = 0

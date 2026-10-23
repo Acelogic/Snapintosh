@@ -69,9 +69,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 IMPL = sorted(str(p.relative_to(ROOT)) for p in (ROOT / 'compat').glob('sptm*.c'))
 IMPL += ['shadow/sprr-view.c', 'shadow/mmu.c', 'shadow/shadow.c', 'compat/service-lock.c']
 CC = ['clang', '-std=gnu11', '-O1', '-g', '-pthread', '-ffunction-sections', '-Wl,-dead_strip',
@@ -733,7 +734,7 @@ SOURCE_MUTANTS = {
 class Source(unittest.TestCase):
     def test_define_off_text(self):
         for rel in CHANGED:
-            off = strip((ROOT / rel).read_text())
+            off = strip(read_source(ROOT / rel))
             for token in ('SNAP_FINE', 'fine_', 'FINE_', 'fine-lock.h', '_fine', 'SNAP_FAIR', 'try_turn',
                           'guest_service_queue', 'user_pointer_'):
                 self.assertNotIn(token, off, f'{rel}: {token} outside the defines')
@@ -744,7 +745,7 @@ class Source(unittest.TestCase):
         # tokens alone: test_define_off_text stops at xnuboot.c's pre-existing
         # '#elif SNAP_FINE_LOCKS' report-offset chains).
         for rel in CHANGED + ['compat/fine-lock.h', 'compat/token-costs.h']:
-            off = strip((ROOT / rel).read_text())
+            off = strip(read_source(ROOT / rel))
             for token in ('wait_shared', 'SERVICE_GATE_', 'drain_from', 'ahead)', 'gate[4]', 'gate[5]', 'gate[6]',
                           'UINT64_C(1) << 5'):
                 self.assertNotIn(token, off, f'{rel}: {token} outside SNAP_PHASE_FAIR_GATE')

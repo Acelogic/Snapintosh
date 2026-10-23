@@ -47,9 +47,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 VECTORS = (ROOT / 'probes/xnuboot.S').read_text()
 HEADER = (ROOT / 'compat/fast-vector.h').read_text()
 PROFILE = (ROOT / 'compat/service-profile.h').read_text()

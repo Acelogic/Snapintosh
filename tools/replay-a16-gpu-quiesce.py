@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from source_text import read_source, source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'tools'), str(ROOT / 'probes')]
@@ -158,7 +159,7 @@ def main():
     except BaseException as exc:
         check('host_boundary_replay_available', False, error=repr(exc))
     # These are integration ordering assertions, not substitutes for the replay.
-    monitor = (ROOT / 'probes/xnuboot.c').read_text()
+    monitor = read_source(ROOT / 'probes/xnuboot.c')
     report = monitor[monitor.index('uint64_t xnuboot_report(uint64_t *out)\n{'):]
     check('monitor_gate_before_publication', 'if (!gpu_quiesce(c))' in report and
           report.index('if (!gpu_quiesce(c))') < report.index('publish(c->params->mem_low'))
@@ -172,7 +173,8 @@ def main():
         check(fn + '_quarantine_before_capture', 'witness.quarantined' in text and
               text.index('witness.quarantined') < text.index('witness.main_returned', text.index('finally:')))
     bound = sources + ['compat/adreno.h', 'compat/adreno-fill.c', 'compat/adreno-ib.c',
-                      'probes/xnuboot.c', 'probes/xnuboot.S', 'probes/run.py',
+                      *[str(p.relative_to(ROOT)) for p in source_files(ROOT / 'probes/xnuboot.c')],
+                      'probes/xnuboot.S', 'probes/run.py',
                       'probes/xnuboot-terminal.h', 'probes/xnuboot_terminal.py',
                       'tools/cycle_lib/bootstrap_smoke.py', 'tools/cycle_lib/speed_test.py',
                       'tools/cycle_lib/installed_fresh.py', 'tools/a16-control-guard.py',

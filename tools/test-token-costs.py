@@ -28,6 +28,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 CORE = ['compat/sptm-root.c', 'compat/sptm-user.c', 'compat/sptm.c', 'compat/sptm-refs.c',
@@ -400,7 +401,7 @@ class Source(unittest.TestCase):
             text = (ROOT / rel).read_text()
             for n in names:
                 self.assertIn(f'#ifndef {n}\n#define {n} 0\n#endif', text, rel)
-        src = (ROOT / 'probes/xnuboot.c').read_text()
+        src = read_source(ROOT / 'probes/xnuboot.c')
         for n in OURS[:-1]:
             self.assertIn(f'#ifndef {n}\n#define {n} 0\n#endif', src)
         self.assertIn('"nest verdicts are the SWITCH_ROOT memo\'s: its write witness, its sampled walk, linked groups"',

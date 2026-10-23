@@ -8,6 +8,7 @@ single hardware conductor. Failure inventory: docs/GUEST-STOP-PROBE-20261018.md.
 """
 import argparse, hashlib, json, secrets, struct, subprocess, sys, time
 from pathlib import Path
+from source_text import source_files
 R=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(R/'probes'))
 import run
@@ -44,6 +45,7 @@ def main():
     out.mkdir(parents=True)
     sources=[R/'tools/guest-stop-probe.S',R/'tools/guest-stop-probe.c',*[R/s for s in run.MULTI['xnuboot'][2:]]]
     inputs=sorted(set(sources+[R/'probes/xnuboot.c',R/'probes/xnuboot.S',R/'probes/run.py',Path(__file__).resolve(),R/'docs/GUEST-STOP-PROBE-20261018.md']+list((R/'compat').glob('*.h'))+list((R/'shadow').glob('*.h'))+list((R/'probes').glob('*.h'))))
+    inputs=sorted(set(inputs+[q for p in inputs if p.suffix=='.c' for q in source_files(p)[1:]]))
     receipt=dict(status='BUILDING',scope='Real monitor EL1 timer/vectors/async/service stop; minimal guest setup and CPU0 report; no XNU or GPU',source_sha256={str(p):sha(p) for p in inputs},flags=run.FLAGS,qemu=args.qemu,case=args.case)
     def save():(out/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
     save()

@@ -17,6 +17,7 @@ import pathlib
 import re
 import struct
 import sys
+from source_text import read_source
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location('run', ROOT / 'probes' / 'run.py')
@@ -110,7 +111,7 @@ assert 'TXM request rejected' in why and '0x24' in why and 'not implemented' not
 # Completed slides cannot share the TXM refusal event ID. Clock failures must
 # remain visible after the bounded event log fills.
 c_events = re.findall(r'^#define (EV_\w+)\s+(\d+)\b',
-                     (ROOT / 'probes/xnuboot.c').read_text(), re.M)
+                     read_source(ROOT / 'probes/xnuboot.c'), re.M)
 assert len({int(n) for _, n in c_events}) == len(c_events), 'duplicate event IDs'
 assert run.EVENTS[31] == 'SLIDE_REGION completed'
 code, why = run.classify(1, 0, '', [event(GUEST_EXC)],
@@ -914,7 +915,7 @@ for log_ in ([call(0, 1), call(7, 0x32)], [event(GUEST_EXC)], [map_failed(10)]):
 # The probe's source, read once: several checks below are about WHERE a
 # statement sits or WHAT a constant is, and those are properties of the
 # source rather than of anything importable.
-_record = (ROOT / 'probes' / 'xnuboot.c').read_text()
+_record = read_source(ROOT / 'probes' / 'xnuboot.c')
 
 # The report's geometry, rebuilt here from the C side's own constants rather
 # than imported from run.py, so the two arithmetics are independent and a

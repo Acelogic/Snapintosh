@@ -7,6 +7,7 @@ import runpy
 import struct
 import subprocess
 import tempfile
+from source_text import read_source
 
 ROOT=Path(__file__).resolve().parents[1]
 HARNESS=r'''
@@ -114,7 +115,7 @@ int main(int argc,char **argv)
 '''
 
 def main():
-    source=(ROOT/'probes/xnuboot.c').read_text()
+    source=read_source(ROOT/'probes/xnuboot.c')
     extract=runpy.run_path(str(ROOT/'tools/test-guard-step.py'))['function']
     signatures=[
         'static int kernel_refresh(struct context *c)\n{',

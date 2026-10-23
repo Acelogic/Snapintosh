@@ -10,6 +10,7 @@ import re
 import struct
 import subprocess
 import sys
+from source_text import read_source, source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
@@ -169,13 +170,15 @@ def main():
         mixed = records['mixed']
         assert mixed['status'] == 'PASS' and mixed['build_exit'] == mixed['replay_exit'] == 0
         assert mixed['regressions'] == {'test-sptm-update': 0, 'test-user-update': 0}
-        assert mixed['source_sha256']['probes/xnuboot.c'] == sha(ROOT / 'probes/xnuboot.c')
+        for part in source_files(ROOT / 'probes/xnuboot.c'):
+            assert mixed['source_sha256'][str(part.relative_to(ROOT))] == sha(part)
         assert sha(Path(mixed['capture'])) == mixed['capture_sha256']
         assert mixed['request']['count'] == 2 and int(mixed['request']['options'], 0) == 0x10a
     else:
-        assert sha(original / 'probes/xnuboot.c') == raw_build['source_sha256']['probes/xnuboot.c']
-    context = layout((ROOT / 'probes/xnuboot.c').read_text(), ROOT)
-    assert context == layout((original / 'probes/xnuboot.c').read_text(), original)
+        for part in source_files(original / 'probes/xnuboot.c'):
+            assert sha(part) == raw_build['source_sha256'][str(part.relative_to(original))]
+    context = layout(read_source(ROOT / 'probes/xnuboot.c'), ROOT)
+    assert context == layout(read_source(original / 'probes/xnuboot.c'), original)
     assert len(context['fields']) == 215 and context['context_bytes'] == 5094208
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)

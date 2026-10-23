@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 import time
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
@@ -118,14 +119,14 @@ def main():
     spec = importlib.util.spec_from_file_location('component_layout', helper_path)
     helper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(helper)
-    context = helper.layout((ROOT/'probes/xnuboot.c').read_text(), ROOT)
+    context = helper.layout(read_source(ROOT/'probes/xnuboot.c'), ROOT)
     previous = json.loads((pa_path.parent/'context-layout.json').read_text())
     assert len(previous['fields']) == 215 and previous['context_bytes'] == 5094208
     assert {k: context['fields'].get(k) for k in previous['fields']} == previous['fields']
     assert set(context['fields'])-set(previous['fields']) == {'perf'}
     assert context['fields']['perf'] == previous['context_bytes']
     assert len(context['fields']) == 216 and context['context_bytes'] == 5108352
-    current_source, previous_source = [(r/'probes/xnuboot.c').read_text() for r in (ROOT, pa_root)]
+    current_source, previous_source = [read_source(r/'probes/xnuboot.c') for r in (ROOT, pa_root)]
     for callback in ('pauth_batch_native_sign', 'pauth_pointer_native_sign'):
         pattern = r'^static int '+callback+r'\(.*?^\}'
         assert re.search(pattern, current_source, re.M | re.S)[0] == re.search(pattern, previous_source, re.M | re.S)[0]

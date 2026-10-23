@@ -19,6 +19,7 @@ import sys
 import tempfile
 import unittest
 import zlib
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'probes'))
@@ -293,7 +294,7 @@ class ParamsTests(unittest.TestCase):
             built = xb.build(str(xb.DEFAULT_KERNELCACHE), auxkc=str(kc))
         blob = xb.params_blob(built)
         self.assertEqual(len(blob), xb.PARAMS_WORDS * 8)
-        self.assertIn(f'#define PARAMS_WORDS {xb.PARAMS_WORDS}', (ROOT / 'probes/xnuboot.c').read_text())
+        self.assertIn(f'#define PARAMS_WORDS {xb.PARAMS_WORDS}', read_source(ROOT / 'probes/xnuboot.c'))
         words = struct.unpack(f'<{xb.PARAMS_WORDS}Q', blob)
         count = words[90]
         models = [words[91 + 8 * i:99 + 8 * i] for i in range(count)]

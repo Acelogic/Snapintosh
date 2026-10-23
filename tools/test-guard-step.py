@@ -9,6 +9,7 @@ from pathlib import Path
 import os
 import subprocess
 import tempfile
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -164,7 +165,7 @@ int main(void)
 
 
 def main():
-    source = (ROOT / 'probes/xnuboot.c').read_text()
+    source = read_source(ROOT / 'probes/xnuboot.c')
     production = '\n'.join(function(source, signature) for signature in (
         'static struct guard *guard_find(', 'static void guard_step('))
     with tempfile.TemporaryDirectory(prefix='snapintosh-guard-step-') as tmp:

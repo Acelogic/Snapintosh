@@ -45,6 +45,7 @@ import tempfile
 import types
 import unittest
 from dataclasses import fields, replace
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'probes'))
@@ -141,7 +142,7 @@ class Monitor(unittest.TestCase):
         self.assertEqual(bit('S2_XN'), i2cinput.S2_XN)
 
     def test_monitor_source(self):
-        src = SOURCE.read_text()
+        src = read_source(SOURCE)
         self.assertIn('#ifndef SNAP_I2C_INPUT\n#define SNAP_I2C_INPUT 0\n#endif\n'
                       '#if SNAP_I2C_INPUT\n#include "../compat/i2c-input.h"\n#endif\n', src)
         self.assertEqual(src.count('i2c-input.h"'), 1)

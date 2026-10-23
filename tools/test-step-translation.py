@@ -6,6 +6,7 @@ import os
 import runpy
 import subprocess
 import tempfile
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 function = runpy.run_path(str(ROOT / 'tools/test-guard-step.py'))['function']
@@ -116,7 +117,7 @@ int main(void)
 
 
 def main():
-    source = (ROOT / 'probes/xnuboot.c').read_text()
+    source = read_source(ROOT / 'probes/xnuboot.c')
     production = '\n'.join(function(source, signature) for signature in (
         'static struct guard *guard_find(', 'static uint64_t step_instruction_pa('))
     with tempfile.TemporaryDirectory(prefix='snapintosh-step-translation-') as tmp:

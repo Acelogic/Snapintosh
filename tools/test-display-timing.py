@@ -31,6 +31,7 @@ import sys
 import tempfile
 import types
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'probes'))
@@ -92,7 +93,7 @@ class Monitor(unittest.TestCase):
         self.assertEqual(d.S2_DEVICE_RO, 0x40 | 0x4 | 0x300 | 0x400)
 
     def test_monitor_source(self):
-        src = (ROOT / 'probes/xnuboot.c').read_text()
+        src = read_source(ROOT / 'probes/xnuboot.c')
         self.assertIn('#ifndef SNAP_DISPLAY_TIMING\n#define SNAP_DISPLAY_TIMING 0\n#endif', src)
         self.assertEqual(src.count('#include "../compat/display-timing.h"'), 1)
         self.assertIn('if (rows < 0) return -43;', src)

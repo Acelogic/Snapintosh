@@ -28,6 +28,7 @@ import subprocess
 import sys
 import tarfile
 import io
+from source_text import source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 Q1N1 = ROOT.parent / 'q1n1' / 'tools'
@@ -158,7 +159,8 @@ def main():
     inputs = ['tools/test-adreno-ring.c', 'tools/test-adreno.c', 'tools/test-adreno-fill.c', 'compat/adreno.c',
               'compat/adreno.h', 'compat/adreno-fill.c', 'compat/adreno-fill.h', 'compat/adreno-ib.c',
               'compat/adreno-ib.h', 'compat/adreno-guest.h', 'gpu/adreno-kext/include/AdrenoA8xxRegs.h',
-              'probes/xnuboot.c', 'probes/run.py', 'probes/adreno.py', 'tools/adreno_counters.py',
+              *[str(p.relative_to(ROOT)) for p in source_files(ROOT / 'probes/xnuboot.c')],
+              'probes/run.py', 'probes/adreno.py', 'tools/adreno_counters.py',
               str(Path(__file__).relative_to(ROOT))]
     record.update(status='RING_WRAP_AND_GUEST_IB_HOST_QUALIFIED', head=head,
         pre_change_ref=pre_change_ref, commands=commands,

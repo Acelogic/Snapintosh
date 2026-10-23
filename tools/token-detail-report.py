@@ -107,7 +107,7 @@ def main():
     flags = launch['flags']
     for path, digest in launch.get('source_sha256', {}).items():
         rel = path.split('/Snapintosh/')[-1]
-        if rel.startswith(('probes/xnuboot.c', 'shadow/', 'compat/')):
+        if rel.startswith(('probes/xnuboot.c', 'probes/xnuboot/', 'shadow/', 'compat/')):
             if not (tree / rel).exists() or hashlib.sha256((tree / rel).read_bytes()).hexdigest() != digest:
                 sys.exit(f'{tree / rel} differs from the run\'s build: give --tree with the sources it was built from')
     layout = Layout(flags, tree)

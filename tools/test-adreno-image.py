@@ -19,6 +19,7 @@ import struct
 import sys
 import unittest
 from pathlib import Path
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'probes'))
@@ -302,7 +303,7 @@ class Params(unittest.TestCase):
         xb.configure_guest(PLAIN)
         self.assertIsNone(xb.GUEST_PROFILE.adreno)
         self.assertEqual(adreno.params_words(xb.GUEST_PROFILE.adreno, None), [0] * adreno.PARAMS_WORDS)
-        src = (ROOT / 'probes/xnuboot.c').read_text()
+        src = read_source(ROOT / 'probes/xnuboot.c')
         self.assertIn(f'#define PARAMS_WORDS {xb.PARAMS_WORDS}', src)
 
 

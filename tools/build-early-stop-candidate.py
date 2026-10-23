@@ -17,6 +17,7 @@ import json
 import re
 import runpy
 import subprocess
+from source_text import source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -69,6 +70,7 @@ def main():
         sources.update(p for p in (ROOT / 'shadow').glob('*.h'))
         sources.update([Path(__file__), ROOT / 'probes/run.py', ROOT / 'probes/probe.ld',
                         ROOT / 'probes/xnuboot.py', ROOT / 'tools/early_stop.py', args.flags_from.resolve()])
+        sources.update(q for p in list(sources) if p.suffix == '.c' for q in source_files(p))
         record['inputs_sha256'] = {str(p.resolve()): sha(p) for p in sorted(sources)}
         record.update(status='EARLY_STOP_MONITOR_BUILT',
                       boundary='Current SKS monitor flags and sources plus compat/early-stop.c and its '

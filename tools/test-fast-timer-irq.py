@@ -45,9 +45,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 HEADER = (ROOT / 'compat/fast-timer-irq.h').read_text()
 TEST_C = (ROOT / 'tools/test-fast-timer-irq.c').read_text()
 DEFINE = '-DSNAP_FAST_TIMER_IRQ=1'

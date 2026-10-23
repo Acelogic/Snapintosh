@@ -43,9 +43,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 VECTORS = (ROOT / 'probes/xnuboot.S').read_text()
 HEADER = (ROOT / 'compat/wfi-resume.h').read_text()
 KERNELCACHE = ROOT / 'downloads/extracted/j700ap/kernelcache.release.mac17p'

@@ -37,9 +37,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'probes/xnuboot.c').read_text()
+SOURCE = read_source(ROOT / 'probes/xnuboot.c')
 LINK = (ROOT / 'compat/guest-net-link.h').read_text()
 NET = (ROOT / 'compat/guest-net.h').read_text()
 DEFINE = '-DSNAP_GUEST_NET=1'

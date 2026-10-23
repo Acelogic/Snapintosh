@@ -22,6 +22,7 @@ import runpy
 import struct
 import sys
 import time
+from source_text import source_files
 
 from .common import need, image_base, battery_minimum
 from .bootstrap_smoke import (IDENTITY, WitnessProxy, digest, load, modules, sha, source_paths,
@@ -343,7 +344,8 @@ def decode(ws, dest, record):
     root = ws.root
     # Layouts come from the current sources, so a capture decodes only with the
     # sources it was built from (the 48-slot census predates SYSREG-CENSUS-20261016).
-    for name in ('compat/fast-trap.h', 'compat/perf-state.h', 'probes/xnuboot.c', 'tools/perf_counters.py'):
+    monitor = [str(p.relative_to(Path(root).resolve())) for p in source_files(root / 'probes/xnuboot.c')]
+    for name in ('compat/fast-trap.h', 'compat/perf-state.h', *monitor, 'tools/perf_counters.py'):
         path = str(root / name)
         need(record['source_sha256'].get(path) in (None, sha(path)),
              f'{name} differs from the run\'s build; decode it from the commit it was built from')
