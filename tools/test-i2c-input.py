@@ -45,7 +45,6 @@ import tempfile
 import types
 import unittest
 from dataclasses import fields, replace
-from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'probes'))

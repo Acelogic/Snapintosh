@@ -40,8 +40,6 @@ import subprocess
 import sys
 from source_text import source_files
 
-from source_text import source_files
-
 ROOT = Path(__file__).resolve().parents[1]
 Q1N1 = ROOT.parent / 'q1n1' / 'tools'
 PLANS = ROOT / 'build' / 'adreno-pipeline-compiler-20260927'
