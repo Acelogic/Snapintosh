@@ -308,7 +308,7 @@ def source_problems_compat():
     every store made through the pointer."""
     p = []
     for path in sorted((ROOT / 'compat').glob('*.c')):
-        for size in re.findall(r'map_shadow\(\s*b->ctx\s*,\s*\w+\s*,\s*([^)]+)\)', path.read_text()):
+        for size in re.findall(r'map_shadow\(\s*b->ctx\s*,\s*\w+\s*,\s*([^)]+)\)', read_source(path)):
             if size.strip() not in ('4096', '0x1000'):
                 p.append(f'{path.name}: map_shadow of {size.strip()}')
     return p
