@@ -76,7 +76,7 @@ from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = read_source(ROOT / 'probes/xnuboot.c')
-ROOT_C = (ROOT / 'compat/sptm-root.c').read_text()
+ROOT_C = read_source(ROOT / 'compat/sptm-root.c')
 HEADER = (ROOT / 'compat/user-hw-walk.h').read_text()
 DEFINE = '-DSNAP_USER_HW_WALK=1'
 CORE = ['compat/sptm-root.c', 'compat/sptm-user.c', 'compat/sptm.c', 'compat/sptm-refs.c',

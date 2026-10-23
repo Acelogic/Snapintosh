@@ -80,7 +80,7 @@ def compile_c(directory, test, defines, overrides=None, name=None):
         for hdr in ('sptm-root.h', 'native-shared.h'):
             (mut / hdr).write_text(overrides.get(hdr, (ROOT / ('compat' if hdr == 'sptm-root.h' else 'shadow') / hdr).read_text()))
         for src in ('compat/sptm-root.c', 'shadow/native-shared.c'):
-            (mut / Path(src).name).write_text((ROOT / src).read_text())
+            (mut / Path(src).name).write_text(read_source(ROOT / src))
         include = [f'-I{mut}']
         sources = [str(mut / Path(s).name) if s in ('compat/sptm-root.c', 'shadow/native-shared.c') else s
                    for s in sources]

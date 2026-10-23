@@ -280,7 +280,7 @@ class Mutants(unittest.TestCase):
         for n, (name, rel, old, new, extra) in enumerate(MUTANTS):
             if ARGS.quick and name not in QUICK_MUTANTS:
                 continue
-            text = (ROOT / rel).read_text()
+            text = read_source(ROOT / rel)
             self.assertEqual(text.count(old), 1, f'mutant {name} anchor')
             tree = WORK / f'mutant-{n}'
             for d in ('compat', 'shadow', 'tools'):

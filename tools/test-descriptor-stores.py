@@ -158,7 +158,7 @@ class Sources(unittest.TestCase):
             text = read_source(ROOT / f)
             self.assertRegex(text, r'static uint64_t get\(volatile uint8_t \*p,unsigned n\)\s*\{\s*if\(n==8\)return sptm_get64\(p\);', f)
             self.assertRegex(text, r'static void put\(volatile uint8_t \*p,uint64_t v,unsigned n\)\s*\{\s*if\(n==8\) \{sptm_put64\(p,v\);return;\}', f)
-        self.assertRegex((ROOT / 'compat/sptm-root.c').read_text(),
+        self.assertRegex(read_source(ROOT / 'compat/sptm-root.c'),
                          r'static uint64_t get\(volatile uint8_t \*p,unsigned n\)\s*\{if\(n==8\)return sptm_get64\(p\);')
         # The helpers themselves: aligned is one volatile 64-bit access; bytes only out of line.
         self.assertIn('if (!((uintptr_t)p & 7)) {*(volatile uint64_t *)(volatile void *)p = v; return;}', ACCESS)

@@ -189,7 +189,7 @@ class Hooks(unittest.TestCase):
         self.assertEqual(SOURCE.count('.install='), 2)
         self.assertIn('.install=user_root_install,.ctx=c,', SOURCE)
         self.assertIn('.install=fine_user_root_install,.ctx=c,', SOURCE)
-        root = (ROOT / 'compat/sptm-root.c').read_text()
+        root = read_source(ROOT / 'compat/sptm-root.c')
         stores = [i for i in range(len(root)) if root.startswith('s->active[cpu]=', i) or
                   root.startswith('__atomic_store_n(&s->active[cpu],', i)]
         self.assertEqual(len(stores), 4)
