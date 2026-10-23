@@ -12,7 +12,8 @@ stated otherwise.
 | Kernel Debug Kit for 26A428 | Installed at `/Library/Developer/KDKs/KDK_27.0_26A428.kdk`. `kmutil` links AuxKCs against it, and `tools/kc-symbolicate.py` uses its symbols |
 | Python 3 | For every host tool |
 | Homebrew `llvm`, `meson`, `ninja` | For the air2ir3 shader compiler and its Mesa build. The scripts expect LLVM at `/opt/homebrew/opt/llvm` |
-| q1n1 | A checkout of [q1n1](https://github.com/Acelogic/q1n1) next to this repository, at `../q1n1`. Several tools import its proxy client and helpers from there |
+| Submodules | Clone with `git clone --recurse-submodules`, or run `git submodule update --init` in an existing checkout. The kext, plug-in, shader compiler and two drivers live in their own repositories (see the README's Repositories section) |
+| q1n1 | A checkout of [q1n1](https://github.com/Snapintosh/q1n1) next to this repository, at `../q1n1`. Several tools import its proxy client and helpers from there |
 
 ## 1. Apple inputs
 

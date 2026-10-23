@@ -34,6 +34,11 @@ a direction, not an already implemented or authorized replacement for this flow.
 | QCC2072 Wi-Fi and I2C-HID input drivers | `drivers/` |
 | Host tests, offline replays and diagnostics | `tools/test-*`, `tools/replay-*` |
 
+The paths `gpu/adreno-kext/kext`, `gpu/adreno-kext/plugin`, `gpu/air2ir3`,
+`drivers/snap-i2c-hid` and `drivers/snap-qcc2072` are git submodules (SnapAdreno, SnapMetal, air2ir3,
+SnapI2CHID and SnapQCC2072 in the Snapintosh organization). Change a component in its own repository first,
+then move the submodule pointer here in a separate `repo:` commit.
+
 Priority: legal/credential restrictions and hardware safety are absolute;
 verified ABI and architectural contracts outrank aesthetic preferences. Where
 another document specifies an exact build or run procedure, follow it unless

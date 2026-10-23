@@ -83,13 +83,37 @@ A16 UEFI -> q1n1 (EL2 proxy) -> Snapintosh monitor (EL2) -> XNU + AuxKC (EL1) ->
 | `shadow/` | the page-table walker and the 16 KiB guest to 4 KiB hardware shadow tables |
 | `probes/` | the code that runs on the target (loader, monitor entry) and the host-side image builder and runner |
 | `tools/` | firmware acquisition, kernelcache analysis, the boot-cycle tool (`cycle.py`), build helpers and the native test suites |
-| `gpu/adreno-kext/` | the AdrenoX2 kext (`kext/`), the AdrenoMetal plug-in (`plugin/`) and the shared register and contract headers |
-| `gpu/air2ir3/` | the AIR to ir3 shader compiler ([README](gpu/air2ir3/README.md)) |
+| `gpu/adreno-kext/` | the AdrenoX2 kext (`kext/`, submodule [SnapAdreno](https://github.com/Snapintosh/SnapAdreno)), the AdrenoMetal plug-in (`plugin/`, submodule [SnapMetal](https://github.com/Snapintosh/SnapMetal)) and the shared register and contract headers (`include/`) |
+| `gpu/air2ir3/` | the AIR to ir3 shader compiler (submodule [air2ir3](https://github.com/Snapintosh/air2ir3)) |
 | `gpu/agx*` | an earlier virtual-AGX model, kept for reference |
-| `drivers/` | smaller kexts: SnapI2CHID (`snap-i2c-hid/`), the QCC2072 Wi-Fi controller (`snap-qcc2072/`), the boot framebuffer, a loader test |
+| `drivers/` | SnapI2CHID (`snap-i2c-hid/`, submodule [SnapI2CHID](https://github.com/Snapintosh/SnapI2CHID)), the QCC2072 Wi-Fi controller (`snap-qcc2072/`, submodule [SnapQCC2072](https://github.com/Snapintosh/SnapQCC2072)), the boot framebuffer, a loader test |
 | `config/` | monitor feature flags and guest launchd jobs |
 | `build/` | generated output (gitignored, apart from the AuxKC link helpers) |
 | `docs/` | design and reference documentation |
+
+## Repositories
+
+Snapintosh is split across the [Snapintosh organization](https://github.com/Snapintosh). This umbrella repository
+holds the EL2 monitor, the host tools and the documentation, and mounts the components below as git submodules at
+the paths they always had, so every relative build path is unchanged. Clone it with its submodules:
+
+```sh
+git clone --recurse-submodules https://github.com/Snapintosh/Snapintosh.git
+git clone https://github.com/Snapintosh/q1n1.git     # next to it, at ../q1n1
+```
+
+| Repository | Mounted at | Contents |
+| --- | --- | --- |
+| [Snapintosh](https://github.com/Snapintosh/Snapintosh) | (this repository) | EL2 monitor (`probes/`, `compat/`, `shadow/`), `tools/`, docs |
+| [q1n1](https://github.com/Snapintosh/q1n1) | `../q1n1` (separate checkout) | UEFI EL2 proxy and loader, a fork of Asahi Linux's m1n1 |
+| [SnapAdreno](https://github.com/Snapintosh/SnapAdreno) | `gpu/adreno-kext/kext` | Adreno X2-90 IOGPU and display kernel driver |
+| [SnapMetal](https://github.com/Snapintosh/SnapMetal) | `gpu/adreno-kext/plugin` | Metal driver plug-in (`AdrenoMetal.bundle`) |
+| [air2ir3](https://github.com/Snapintosh/air2ir3) | `gpu/air2ir3` | AIR to Mesa ir3 shader compiler kit |
+| [SnapI2CHID](https://github.com/Snapintosh/SnapI2CHID) | `drivers/snap-i2c-hid` | I2C-HID keyboard, touchpad and precision-touchpad driver |
+| [SnapQCC2072](https://github.com/Snapintosh/SnapQCC2072) | `drivers/snap-qcc2072` | QCC2072 Wi-Fi driver (work in progress) |
+
+A change to a component lands in its own repository first; the umbrella then moves the submodule pointer in a
+separate commit.
 
 ## Building
 

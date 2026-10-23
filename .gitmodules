@@ -1,0 +1,15 @@
+[submodule "drivers/snap-i2c-hid"]
+	path = drivers/snap-i2c-hid
+	url = https://github.com/Snapintosh/SnapI2CHID.git
+[submodule "drivers/snap-qcc2072"]
+	path = drivers/snap-qcc2072
+	url = https://github.com/Snapintosh/SnapQCC2072.git
+[submodule "gpu/air2ir3"]
+	path = gpu/air2ir3
+	url = https://github.com/Snapintosh/air2ir3.git
+[submodule "gpu/adreno-kext/kext"]
+	path = gpu/adreno-kext/kext
+	url = https://github.com/Snapintosh/SnapAdreno.git
+[submodule "gpu/adreno-kext/plugin"]
+	path = gpu/adreno-kext/plugin
+	url = https://github.com/Snapintosh/SnapMetal.git
