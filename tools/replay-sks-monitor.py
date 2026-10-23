@@ -73,7 +73,7 @@ def main():
         ROOT/'docs/SKS-DMA-E2E-20260928.md']+list((ROOT/'compat').glob('*.h'))
     record=dict(status='RUNNING',hardware_access=False,inputs_sha256={str(p):sha(p) for p in pins})
     try:
-        source=(ROOT/'probes/xnuboot.c').read_text()
+        source=(ROOT/'compat/sep-callbacks.h' if (ROOT/'compat/sep-callbacks.h').exists() else ROOT/'probes/xnuboot.c').read_text()
         begin=source.index('struct sep_rom_dma_context {');end=source.index('\n};',begin)+3
         callback_begin=source.index('static int sep_service_admit(')
         callback_end=source.index('static int sep_entropy32(',callback_begin)

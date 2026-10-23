@@ -116,7 +116,7 @@ def main():
         record['native_binding'] = sender.binding
         assert sender.pack(0x2a, 2, 1128) == 0x0468000000022a03
         record['generation53_failed_request_reproduced'] = True
-        source = (ROOT/'probes/xnuboot.c').read_text()
+        source = (ROOT/'compat/sep-callbacks.h' if (ROOT/'compat/sep-callbacks.h').exists() else ROOT/'probes/xnuboot.c').read_text()
         begin = source.index('struct sep_rom_dma_context {')
         end = source.index('\n};', begin)+3
         cb = source.index('static int sep_service_admit(')

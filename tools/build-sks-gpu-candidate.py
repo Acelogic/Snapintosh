@@ -31,7 +31,10 @@ def main():
         for path,digest in json.loads(proof.read_text())['inputs_sha256'].items():assert sha(path)==digest,path
     # The DMA qualification executed the same callback source used by this build.
     def callbacks(path):
-        source=path.read_text();a=source.index('static int sep_service_admit(')
+        source=path.read_text()
+        if 'sep-callbacks.h' in source:
+            source=(path.parent.parent/'compat/sep-callbacks.h').read_text()
+        a=source.index('static int sep_service_admit(')
         return source[a:source.index('static int sep_entropy32(',a)]
     assert callbacks(root/'probes/xnuboot.c')==callbacks(ORIGINAL/'probes/xnuboot.c')
     permitted={'compat/device.c','compat/device.h','compat/sptm-dart.c','compat/sptm-dart.h',
