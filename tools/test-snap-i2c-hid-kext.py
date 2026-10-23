@@ -42,6 +42,8 @@ import sys
 import tempfile
 import unittest
 
+from source_text import read_source
+
 ROOT = Path(__file__).resolve().parents[1]
 DRIVER = ROOT / 'drivers/snap-i2c-hid'
 KDK = Path('/Library/Developer/KDKs/KDK_27.0_26A428.kdk/System/Library/Extensions')
@@ -334,7 +336,7 @@ class Kext(unittest.TestCase):
         source = (DRIVER / 'src/geni-i2c.c').read_text()
         written = set(re.findall(r'\bwr\(c, (GENI_\w+)', source))
         self.assertEqual(written, WRITABLE)
-        glue = (DRIVER / 'src/SnapI2CHID.cpp').read_text()
+        glue = read_source(DRIVER / 'src/SnapI2CHID.cpp')
         self.assertEqual(glue.count('SNAP_I2C_HID_MMIO_READ(self->fBase, offset)'), 1, 'MMIO only through ioRead32')
         self.assertEqual(glue.count('SNAP_I2C_HID_MMIO_WRITE(self->fBase, offset, value)'), 1, 'and ioWrite32')
         self.assertEqual(len(re.findall(r'\bfBase\b', glue)), 5, 'no other use of the mapped window')
@@ -364,7 +366,7 @@ class Kext(unittest.TestCase):
             self.assertEqual(result.returncode, 0, f'{scenario}: {result.stdout[-1500:]}{result.stderr[-1500:]}')
             self.assertIn(f'PASS {scenario}', result.stdout)
         survivors = []
-        text = (DRIVER / 'src/SnapI2CHID.cpp').read_text()
+        text = read_source(DRIVER / 'src/SnapI2CHID.cpp')
         for n, (what, old, new) in enumerate(MUTATIONS):
             self.assertEqual(text.count(old), 1, what)
             mutant = self.work / f'mutant-{n}.cpp'
@@ -384,7 +386,7 @@ class Kext(unittest.TestCase):
             self.assertEqual(result.returncode, 0, f'{scenario}: {result.stdout[-1500:]}{result.stderr[-1500:]}')
             self.assertIn(f'PASS {scenario}', result.stdout)
         survivors = []
-        text = (DRIVER / 'src/SnapI2CHID.cpp').read_text()
+        text = read_source(DRIVER / 'src/SnapI2CHID.cpp')
         for n, (what, old, new) in enumerate(LATENCY_MUTATIONS):
             self.assertEqual(text.count(old), 1, what)
             mutant = self.work / f'latency-mutant-{n}.cpp'
