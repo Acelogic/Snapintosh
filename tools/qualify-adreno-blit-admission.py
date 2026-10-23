@@ -12,6 +12,7 @@ from pathlib import Path
 import struct
 import subprocess
 import sys
+from source_text import source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -148,6 +149,7 @@ def main():
     guest_bytes = arena_offset + 0x100000
     assert max_resources <= 4096 and guest_bytes <= 0x10000000
     report['fixture'] = {'max_resources': max_resources, 'arena_offset': arena_offset, 'guest_bytes': guest_bytes}
+    inputs += [q for p in inputs if p.suffix == '.c' and p.is_file() for q in source_files(p)[1:]]
     report['inputs'] = {str(p): sha(p) for p in sorted(set(inputs))}
 
     def save():

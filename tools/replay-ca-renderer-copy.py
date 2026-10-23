@@ -15,6 +15,7 @@ import re
 import struct
 import subprocess
 import sys
+from source_text import source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -191,7 +192,8 @@ try:
     sources += ['compat/adreno-fill-command.c','compat/adreno-fill.c','compat/adreno-submit.c',
                 'compat/adreno-resource.c','compat/adreno-resource-list.c','compat/adreno.c',
                 'compat/irq-forward.c','shadow/stage2.c','shadow/shadow.c','shadow/mmu.c']
-    record['production_inputs'] = {s:sha(ROOT/s) for s in sources}
+    parts = [str(q.relative_to(ROOT)) for s in sources if s.endswith('.c') for q in source_files(ROOT/s)[1:]]
+    record['production_inputs'] = {s:sha(ROOT/s) for s in sources+parts}
     binary = out/'kernel-replay'
     # Fit the actual native capture without changing any production limit.
     fixture_count = max(24,len(resources))

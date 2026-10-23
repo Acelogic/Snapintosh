@@ -13,6 +13,7 @@ import re
 import struct
 import subprocess
 import sys
+from source_text import source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 MESA = ROOT / 'gpu/air2ir3/third_party/mesa'
@@ -107,6 +108,7 @@ def main():
         'src/freedreno/ir3/ir3_nir.c', 'src/compiler/shader_enums.h',
         'src/freedreno/decode/cffdec.c', 'src/freedreno/vulkan/tu_pipeline.cc']
     inputs += [MESA / path for path in primary]
+    inputs += [q for p in inputs if p.suffix == '.c' and p.is_file() for q in source_files(p)[1:]]
     report['inputs'] = {str(path): sha(path) for path in sorted(set(inputs))}
     enums = (MESA / 'src/compiler/shader_enums.h').read_text()
     body = enums.split('} gl_system_value;')[0].rsplit('typedef enum', 1)[1]
