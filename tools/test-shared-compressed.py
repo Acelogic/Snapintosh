@@ -38,9 +38,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
-USER_C = (ROOT / 'compat/sptm-user.c').read_text()
+USER_C = read_source(ROOT / 'compat/sptm-user.c')
 CORE = ['compat/sptm-root.c', 'compat/sptm-user.c', 'compat/sptm.c', 'compat/sptm-refs.c',
         'compat/sptm-unmap.c', 'compat/sptm-update.c', 'compat/txm.c', 'compat/sptm-papt.c',
         'compat/sptm-slide.c', 'shadow/shadow.c', 'shadow/mmu.c', 'shadow/sprr-view.c']

@@ -23,6 +23,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 CORE = ['compat/sptm-root.c', 'compat/sptm-user.c', 'compat/sptm.c', 'compat/sptm-refs.c',
@@ -54,7 +55,7 @@ def compile_c(directory, test, defines, overrides=None, extra=('shadow/native-sh
             for f in (ROOT / sub).iterdir():
                 if f.suffix in ('.c', '.h', '.S'):
                     (mut / sub).mkdir(parents=True, exist_ok=True)
-                    (mut / sub / f.name).write_text(f.read_text())
+                    (mut / sub / f.name).write_text(read_source(f))
         for rel, text in overrides.items():
             (mut / rel).write_text(text)
         include = [f'-I{mut}/compat', f'-I{mut}/shadow']
@@ -239,7 +240,7 @@ class Mutants(unittest.TestCase):
             ref = steps(r)
             for label, path, old, new, defines in MUTANTS:
                 with self.subTest(label):
-                    text = (ROOT / path).read_text()
+                    text = read_source(ROOT / path)
                     self.assertEqual(text.count(old), 1, label)
                     sub = Path(d) / hashlib.sha1(label.encode()).hexdigest()[:10]
                     sub.mkdir()

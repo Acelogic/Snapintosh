@@ -45,6 +45,7 @@ import sys
 import tempfile
 import unittest
 import collections
+from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[1]
 ACCESS = (ROOT / 'compat/sptm-access.h').read_text()
@@ -148,13 +149,13 @@ class Sources(unittest.TestCase):
         byte_loop = re.compile(r'for *\( *unsigned +(\w+) *= *0 *; *\1 *< *8 *;[^)]*\)\s*p\[\1\] *= *\(uint8_t\)'
                                r'|for *\( *unsigned +(\w+) *= *0 *; *\2 *< *8 *;[^)]*\)\s*\w+ *\|= *\(uint64_t\)p\[\2\]')
         for f in MODEL_FILES:
-            text = (ROOT / f).read_text()
+            text = read_source(ROOT / f)
             self.assertIn('#include "sptm-access.h"', text, f)
             self.assertEqual(byte_loop.findall(text), [], f'{f}: an eight-iteration byte loop')
             self.assertTrue('sptm_put64(' in text or 'sptm_get64(' in text, f)
         # Generic helpers take the single access for 8 bytes before any byte loop.
         for f in ('compat/sptm-user.c', 'compat/sptm-slide.c'):
-            text = (ROOT / f).read_text()
+            text = read_source(ROOT / f)
             self.assertRegex(text, r'static uint64_t get\(volatile uint8_t \*p,unsigned n\)\s*\{\s*if\(n==8\)return sptm_get64\(p\);', f)
             self.assertRegex(text, r'static void put\(volatile uint8_t \*p,uint64_t v,unsigned n\)\s*\{\s*if\(n==8\) \{sptm_put64\(p,v\);return;\}', f)
         self.assertRegex((ROOT / 'compat/sptm-root.c').read_text(),
